@@ -1,12 +1,17 @@
 [Trigger]
 Operation = Install
 Operation = Upgrade
-Operation = Remove
 Type = File
 Target = boot/vmlinuz-linux*
-Target = boot/intel-ucode.img
 Target = usr/lib/systemd/boot/efi/linux*.efi.stub
 Target = usr/share/systemd/bootctl/splash-arch.bmp
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = File
+Target = boot/intel-ucode.img
 
 [Action]
 Description = Generating and signing UEFI kernel images...
