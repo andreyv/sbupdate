@@ -16,7 +16,7 @@ After you have generated your custom keys, proceed with setup:
 * Run `sudo sbupdate` for first-time image generation
 
 For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated in
-`${ESP}/EFI/Arch/<NAME>-signed.efi`, where `${ESP}` is typically `/boot`. Now
+`<ESP>/EFI/Arch/<NAME>-signed.efi`, where `<ESP>` is typically `/boot`. Now
 you can add these images to your UEFI firmware or boot manager configuration.
 
 After the initial setup, signed images will be (re)generated automatically when
