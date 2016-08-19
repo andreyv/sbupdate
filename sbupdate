@@ -97,7 +97,7 @@ done
 
 # Also sign user-specified extra files
 
-for file in "${EXTRA_SIGN[@]}"; do
+for file in ${EXTRA_SIGN:+"${EXTRA_SIGN[@]}"}; do
   if sbverify --cert "${KEY_DIR}/DB.crt" "${file}" >/dev/null 2>&1; then
     echo "Skipping already signed file ${file}"
   else
