@@ -5,6 +5,8 @@ Operation = Remove
 Type = File
 Target = boot/vmlinuz-linux*
 Target = boot/intel-ucode.img
+Target = usr/lib/systemd/boot/efi/linux*.efi.stub
+Target = usr/share/systemd/bootctl/splash-arch.bmp
 
 [Action]
 Description = Generating and signing UEFI kernel images...
