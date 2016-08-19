@@ -1,0 +1,36 @@
+# Configuration file for sbupdate
+#
+# Commented-out variables show default values.
+
+#
+# Common settings
+#
+# KEY_DIR          Directory with the custom Secure Boot keys
+# ESP_DIR          EFI System Partition location
+# OUTPUT_DIR       Directory for signed EFI images
+# SPLASH           Splash image file
+# EXTRA_SIGN       An array of additional files to sign
+# CMDLINE_DEFAULT  Default kernel command line
+# 
+
+#KEY_DIR="/etc/secure-boot"
+#ESP_DIR="/boot"
+#OUTPUT_DIR="${ESP_DIR}/EFI/Arch"
+#SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
+#EXTRA_SIGN=()
+#CMDLINE_DEFAULT=""
+
+#
+# Kernel configuration
+#
+# Kernels are specified by adding a kernel name to the KERNEL array.
+# Additionally, corresponding CMDLINE and INITRD entries may also be
+# added. An example of a kernel entry:
+#
+#   KERNEL[i]="<NAME>"  # Kernel name, as found in /boot/vmlinuz-<NAME>
+#   CMDLINE[i]="..."    # Alternative kernel command line (optional)
+#                       # Default value: ${CMDLINE_DEFAULT}
+#   INITRD[i]="..."     # Alternative initramfs file (optional)
+#                       # Default value: /boot/initramfs-<NAME>.img
+
+KERNEL[0]="linux"

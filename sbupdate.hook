@@ -1,0 +1,12 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = File
+Target = boot/vmlinuz-linux*
+Target = boot/intel-ucode.img
+
+[Action]
+Description = Generating and signing UEFI kernel images...
+When = PostTransaction
+Exec = /usr/local/bin/sbupdate
