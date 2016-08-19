@@ -19,21 +19,22 @@ For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated in
 `${ESP}/EFI/Arch/<NAME>-signed.efi`, where `${ESP}` is typically `/boot`. Now
 you can add these images to your UEFI firmware or boot manager configuration.
 
-Note that kernel command line, initramfs and boot splash will be embedded in
+Note that the kernel command line, initramfs and boot splash will be embedded in
 the signed UEFI image.
 
 ## Configuration
 
 The following settings are available:
-* Command line and initramfs[¹](#intel-ucode) for each specified kernel
+* Command line and initramfs[<sup>1</sup>](#intel-ucode) for each specified kernel
 * A list of additional boot files to sign
 * Locations of the key, ESP and output directories
 * Boot splash image
 
 Edit the file `/etc/default/sbupdate` to change the settings. Note: you **must**
-set your kernel command line in the `CMDLINE_DEFAULT` variable.
+set your default kernel command line in the `CMDLINE_DEFAULT` variable.
 
-<a name="intel-ucode">¹</a> Intel microcode updates are handled automatically.
+<a name="intel-ucode"><sup>1</sup></a> Intel microcode updates are handled
+automatically.
 
 ## Direct booting vs. boot manager
 
@@ -43,10 +44,10 @@ not required. This is similar to Linux [EFISTUB](https://wiki.archlinux.org/inde
 
 Booting directly from firmware is arguably more secure, but may also be harder
 to set up and use. See [Using UEFI directly](https://wiki.archlinux.org/index.php/EFISTUB#Using_UEFI_directly)
-in the above article, with the exception that kernel command line does not need
-to be specified in this case.
+in the above article, with the exception that the kernel command line does not
+need to be specified in this case.
 
-If you choose to use the boot manager, you need to add the generated UEFI
+If you choose to use a boot manager, you need to add the generated UEFI
 images to the boot manager configuration. For systemd-boot, the basic entry
 format is
 
@@ -54,7 +55,7 @@ format is
     efi   /EFI/Arch/<NAME>-signed.efi
 
 You also need to sign your boot manager's own UEFI executables with your
-custom keys. Add the corresponding filenames to the `EXTRA_SIGN` array in
+custom keys. Add corresponding filenames to the `EXTRA_SIGN` array in
 `/etc/default/sbupdate`, for example (systemd-boot):
 
     EXTRA_SIGN=('/boot/EFI/Boot/BOOTX64.EFI' '/boot/EFI/systemd/systemd-bootx64.efi')
