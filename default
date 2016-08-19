@@ -13,7 +13,7 @@
 # CMDLINE_DEFAULT  Default kernel command line
 # 
 
-#KEY_DIR="/etc/secure-boot"
+#KEY_DIR="/root/secure-boot"
 #ESP_DIR="/boot"
 #OUTPUT_DIR="${ESP_DIR}/EFI/Arch"
 #SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
