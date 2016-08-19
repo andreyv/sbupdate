@@ -9,4 +9,4 @@ Target = boot/intel-ucode.img
 [Action]
 Description = Generating and signing UEFI kernel images...
 When = PostTransaction
-Exec = /usr/local/bin/sbupdate
+Exec = /usr/bin/sbupdate
