@@ -7,7 +7,7 @@
 #
 # KEY_DIR          Directory with the custom Secure Boot keys
 # ESP_DIR          EFI System Partition location
-# OUTPUT_DIR       Directory for signed EFI images
+# OUT_DIR          Relative path on ESP for signed kernel images
 # SPLASH           Splash image file
 # EXTRA_SIGN       An array of additional files to sign
 # CMDLINE_DEFAULT  Default kernel command line
@@ -15,7 +15,7 @@
 
 #KEY_DIR="/root/secure-boot"
 #ESP_DIR="/boot"
-#OUTPUT_DIR="${ESP_DIR}/EFI/Arch"
+#OUT_DIR="EFI/Arch"
 #SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
 #EXTRA_SIGN=()
 #CMDLINE_DEFAULT=""

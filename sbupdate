@@ -22,7 +22,7 @@ set -eu
 
 KEY_DIR="/root/secure-boot"
 ESP_DIR="/boot"
-OUTPUT_DIR="${ESP_DIR}/EFI/Arch"
+OUT_DIR="EFI/Arch"
 SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
 EXTRA_SIGN=()
 source "/etc/default/sbupdate"
@@ -62,13 +62,13 @@ if [ -z "${CMDLINE_DEFAULT+x}" ]; then
   exit 1
 fi
 
-mkdir -p "${OUTPUT_DIR}"
+mkdir -p "${ESP_DIR}/${OUT_DIR}"
 for k in "${!KERNEL[@]}"; do
   kernel="${KERNEL[$k]}"
   image="/boot/vmlinuz-${kernel}"
   cmdline="${CMDLINE[$k]:-${CMDLINE_DEFAULT}}"
   initrd="${INITRD[$k]:-/boot/initramfs-${kernel}.img}"
-  output="${OUTPUT_DIR}/${kernel}-signed.efi"
+  output="${ESP_DIR}/${OUT_DIR}/${kernel}-signed.efi"
 
   echo "Generating and signing kernel image for ${kernel}..."
   
