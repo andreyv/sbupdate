@@ -78,7 +78,7 @@ for k in "${!KERNEL[@]}"; do
   fi
   
   # Create cmdline file
-  echo "${cmdline}" > ${CMDLINE_TMP}
+  echo "${cmdline}" > "${CMDLINE_TMP}"
 
   # Join all initramfs files. Refer to:
   #   https://www.kernel.org/doc/Documentation/x86/early-microcode.txt
