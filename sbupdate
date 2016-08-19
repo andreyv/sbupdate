@@ -71,6 +71,11 @@ for k in "${!KERNEL[@]}"; do
   output="${ESP_DIR}/${OUT_DIR}/${kernel}-signed.efi"
 
   echo "Generating and signing kernel image for ${kernel}..."
+
+  # Back up existing file if present
+  if [ -f "${output}" ]; then
+    mv "${output}" "${output}.bak"
+  fi
   
   # Create cmdline file
   echo "${cmdline}" > ${CMDLINE_TMP}
