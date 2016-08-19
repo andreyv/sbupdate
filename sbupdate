@@ -38,7 +38,7 @@ case "$(uname -m)" in
     EFISTUB="/usr/lib/systemd/boot/efi/linuxia32.efi.stub"
     ;;
   *)
-    echo "$0: unsupported architecture: $(uname -m)" >&2
+    echo "$0: error: unsupported architecture: $(uname -m)" >&2
     exit 1
     ;;
 esac
