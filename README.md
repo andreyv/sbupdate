@@ -30,7 +30,8 @@ The following settings are available:
 * Locations of the key, ESP and output directories
 * Boot splash image
 
-Edit the file `/etc/default/sbupdate` to change the settings.
+Edit the file `/etc/default/sbupdate` to change the settings. Note: you _must_
+set your kernel command line in the `CMDLINE_DEFAULT` variable.
 
 <a name="intel-ucode">¹</a> Intel microcode updates are handled automatically.
 
