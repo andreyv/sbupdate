@@ -28,6 +28,11 @@ EXTRA_SIGN=()
 declare -A CMDLINE INITRD
 source "/etc/default/sbupdate"
 
+if [ -z "${CMDLINE_DEFAULT+x}" ]; then
+  echo "$0: error: CMDLINE_DEFAULT is not defined. Set it in the configuration file." >&2
+  exit 1
+fi
+
 
 # Global variables
 
@@ -59,11 +64,6 @@ KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
 
 
 # Main loop
-
-if [ -z "${CMDLINE_DEFAULT+x}" ]; then
-  echo "$0: error: CMDLINE_DEFAULT is not defined. Set it in the configuration file." >&2
-  exit 1
-fi
 
 mkdir -p "${ESP_DIR}/${OUT_DIR}"
 for kernel in "${KERNELS[@]}"; do

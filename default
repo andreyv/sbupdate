@@ -9,7 +9,7 @@
 # OUT_DIR          Relative path on ESP for signed kernel images
 # SPLASH           Splash image file
 # EXTRA_SIGN       An array of additional files to sign
-# CMDLINE_DEFAULT  Default kernel command line
+# CMDLINE_DEFAULT  Default kernel command line (REQUIRED)
 
 #KEY_DIR="/root/secure-boot"
 #ESP_DIR="/boot"
