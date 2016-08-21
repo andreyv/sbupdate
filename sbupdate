@@ -18,61 +18,59 @@
 
 set -eu
 
-# Configuration
+# Load configuration
+function load_config() {
+  KEY_DIR="/root/secure-boot"
+  ESP_DIR="/boot"
+  OUT_DIR="EFI/Arch"
+  SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
+  EXTRA_SIGN=()
+  declare -g -A CMDLINE INITRD
+  source "/etc/default/sbupdate"
 
-KEY_DIR="/root/secure-boot"
-ESP_DIR="/boot"
-OUT_DIR="EFI/Arch"
-SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
-EXTRA_SIGN=()
-declare -A CMDLINE INITRD
-source "/etc/default/sbupdate"
+  if [ -z "${CMDLINE_DEFAULT+x}" ]; then
+    echo "$0: error: CMDLINE_DEFAULT is not defined. Set it in the configuration file." >&2
+    return 1
+  fi
+}
 
-if [ -z "${CMDLINE_DEFAULT+x}" ]; then
-  echo "$0: error: CMDLINE_DEFAULT is not defined. Set it in the configuration file." >&2
-  exit 1
-fi
+# Find the location of the systemd EFI stub
+function find_efi_stub() {
+  case "$(uname -m)" in
+    x86_64)
+      EFISTUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"
+      ;;
+    i686)
+      EFISTUB="/usr/lib/systemd/boot/efi/linuxia32.efi.stub"
+      ;;
+    *)
+      echo "$0: error: unsupported architecture: $(uname -m)" >&2
+      return 1
+      ;;
+  esac
+}
 
-
-# Global variables
-
-case "$(uname -m)" in
-  x86_64)
-    EFISTUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"
-    ;;
-  i686)
-    EFISTUB="/usr/lib/systemd/boot/efi/linuxia32.efi.stub"
-    ;;
-  *)
-    echo "$0: error: unsupported architecture: $(uname -m)" >&2
-    exit 1
-    ;;
-esac
-
-INITRD_PREPEND=()
-[ -f "/boot/intel-ucode.img" ] && INITRD_PREPEND+=('/boot/intel-ucode.img')
-
-INITRD_TMP="$(mktemp)"
-CMDLINE_TMP="$(mktemp)"
-trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
-
+# Check if we need to prepend anything to the initramfs file
+function setup_initrd_prepend() {
+  INITRD_PREPEND=()
+  [ -f "/boot/intel-ucode.img" ] && INITRD_PREPEND+=('/boot/intel-ucode.img')
+}
 
 # Create a list of kernels to process
+function find_kernels() {
+  KERNELS=(/boot/vmlinuz-*)
+  KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
+}
 
-KERNELS=(/boot/vmlinuz-*)
-KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
+# Generate a signed kernel image
+#   $1: kernel name
+function update_kernel() {
+  local image="/boot/vmlinuz-$1"
+  local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
+  local initrd="${INITRD[$1]:-/boot/initramfs-$1.img}"
+  local output="${ESP_DIR}/${OUT_DIR}/$1-signed.efi"
 
-
-# Main loop
-
-mkdir -p "${ESP_DIR}/${OUT_DIR}"
-for kernel in "${KERNELS[@]}"; do
-  image="/boot/vmlinuz-${kernel}"
-  cmdline="${CMDLINE[${kernel}]:-${CMDLINE_DEFAULT}}"
-  initrd="${INITRD[${kernel}]:-/boot/initramfs-${kernel}.img}"
-  output="${ESP_DIR}/${OUT_DIR}/${kernel}-signed.efi"
-
-  echo "Generating and signing kernel image for ${kernel}..."
+  echo "Generating and signing kernel image for $1..."
 
   # Back up existing file if present
   if [ -f "${output}" ]; then
@@ -99,18 +97,42 @@ for kernel in "${KERNELS[@]}"; do
 
   # Sign the resulting output file
   sbsign --key "${KEY_DIR}/DB.key" --cert "${KEY_DIR}/DB.crt" --output "${output}" "${output}"
-done
+}
 
-
-# Also sign user-specified extra files
-
-for file in ${EXTRA_SIGN:+"${EXTRA_SIGN[@]}"}; do
-  if sbverify --cert "${KEY_DIR}/DB.crt" "${file}" >/dev/null 2>&1; then
-    echo "Skipping already signed file ${file}"
+# Sign a user-specified extra file
+#   $1: file path
+function sign_extra_file() {
+  if sbverify --cert "${KEY_DIR}/DB.crt" "$1" >/dev/null 2>&1; then
+    echo "Skipping already signed file $1"
   else
-    echo "Signing ${file}..."
-    sbsign --key "${KEY_DIR}/DB.key" --cert "${KEY_DIR}/DB.crt" --output "${file}" "${file}"
+    echo "Signing $1..."
+    sbsign --key "${KEY_DIR}/DB.key" --cert "${KEY_DIR}/DB.crt" --output "$1" "$1"
   fi
-done
+}
+
+# Entry point
+function main() {
+  load_config
+
+  find_efi_stub
+  setup_initrd_prepend
+  find_kernels
+
+  # Create temporary files for update_kernel()
+  local INITRD_TMP="$(mktemp)"
+  local CMDLINE_TMP="$(mktemp)"
+  trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
+
+  mkdir -p "${ESP_DIR}/${OUT_DIR}"
+  for k in "${KERNELS[@]}"; do
+    update_kernel "$k"
+  done
+
+  for f in ${EXTRA_SIGN:+"${EXTRA_SIGN[@]}"}; do
+    sign_extra_file "$f"
+  done
+}
+
+main "$@"
 
 # vim:set ts=2 sw=2 et:
