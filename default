@@ -18,19 +18,16 @@
 #EXTRA_SIGN=()
 #CMDLINE_DEFAULT=""
 
-# Kernel configuration
+# Per-kernel configuration
 #
-# Kernels are specified by adding a kernel name to the KERNEL array.
-# Additionally, corresponding CMDLINE and INITRD entries may also be
-# added. An example of a kernel entry:
+# For each kernel <NAME> the following optional settings may be added:
 #
-#   KERNEL[i]="<NAME>"  # Kernel name, as found in /boot/vmlinuz-<NAME>
-#   CMDLINE[i]="..."    # Alternative kernel command line (optional)
-#                       # Default value: ${CMDLINE_DEFAULT}
-#   INITRD[i]="..."     # Alternative initramfs file (optional)
-#                       # Default value: /boot/initramfs-<NAME>.img
+#   CMDLINE[<NAME>]="..."  # Alternative kernel command line
+#                          # Default value: ${CMDLINE_DEFAULT}
+#   INITRD[<NAME>]="..."   # Alternative initramfs file
+#                          # Default value: /boot/initramfs-<NAME>.img
+#
+# Example: CMDLINE["linux-lts"]="custom command line"
 #
 # Note: Intel microcode updates are handled automatically and do not
 # need to be specified in INITRD.
-
-KERNEL[0]="linux"

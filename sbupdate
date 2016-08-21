@@ -25,6 +25,7 @@ ESP_DIR="/boot"
 OUT_DIR="EFI/Arch"
 SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
 EXTRA_SIGN=()
+declare -A CMDLINE INITRD
 source "/etc/default/sbupdate"
 
 
@@ -51,23 +52,24 @@ CMDLINE_TMP="$(mktemp)"
 trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
 
 
+# Create a list of kernels to process
+
+KERNELS=(/boot/vmlinuz-*)
+KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
+
+
 # Main loop
 
-if [ "${#KERNEL[@]}" -eq 0 ]; then
-  echo "$0: error: no kernels specified" >&2
-  exit 1
-fi
 if [ -z "${CMDLINE_DEFAULT+x}" ]; then
   echo "$0: error: CMDLINE_DEFAULT is not defined. Set it in the configuration file." >&2
   exit 1
 fi
 
 mkdir -p "${ESP_DIR}/${OUT_DIR}"
-for k in "${!KERNEL[@]}"; do
-  kernel="${KERNEL[$k]}"
+for kernel in "${KERNELS[@]}"; do
   image="/boot/vmlinuz-${kernel}"
-  cmdline="${CMDLINE[$k]:-${CMDLINE_DEFAULT}}"
-  initrd="${INITRD[$k]:-/boot/initramfs-${kernel}.img}"
+  cmdline="${CMDLINE[${kernel}]:-${CMDLINE_DEFAULT}}"
+  initrd="${INITRD[${kernel}]:-/boot/initramfs-${kernel}.img}"
   output="${ESP_DIR}/${OUT_DIR}/${kernel}-signed.efi"
 
   echo "Generating and signing kernel image for ${kernel}..."
