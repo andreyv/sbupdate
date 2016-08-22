@@ -184,9 +184,11 @@ function main() {
     update_kernel "$k"
   done
 
-  for f in ${EXTRA_SIGN:+"${EXTRA_SIGN[@]}"}; do
-    sign_extra_file "$f"
-  done
+  if (( ! HOOK )); then
+    for f in ${EXTRA_SIGN:+"${EXTRA_SIGN[@]}"}; do
+      sign_extra_file "$f"
+    done
+  fi
 }
 
 main "$@"
