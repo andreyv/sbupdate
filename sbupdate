@@ -63,7 +63,7 @@ function output_name() {
 }
 
 # Create a list of kernels to process
-function find_kernels() {
+function get_kernels() {
   KERNELS=(/boot/vmlinuz-*)
   KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
 }
@@ -122,7 +122,7 @@ function main() {
 
   find_efi_stub
   setup_initrd_prepend
-  find_kernels
+  get_kernels
 
   # Create temporary files for update_kernel()
   local INITRD_TMP="$(mktemp)"
