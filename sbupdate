@@ -66,10 +66,51 @@ function output_name() {
   echo "${ESP_DIR}/${OUT_DIR}/$1-signed.efi"
 }
 
+# Remove signed images corresponding to a kernel
+#   $1: kernel name
+function remove_kernel() {
+  local output="$(output_name "$1")"
+
+  echo "Removing kernel image for $1..."
+  rm -f "${output}" "${output}.bak"
+}
+
 # Create a list of kernels to process
 function get_kernels() {
-  KERNELS=(/boot/vmlinuz-*)
-  KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
+  local all_kernels=(/boot/vmlinuz-*); all_kernels=("${all_kernels[@]#/boot/vmlinuz-}")
+  local force_all=0
+  local name
+  KERNELS=()
+
+  if (( HOOK )); then
+    # The script was run from the hook. Read standard input to determine
+    # which kernels we need to update.
+    while read target; do
+      case "${target}" in
+        boot/vmlinuz-*)
+          # Regular kernel
+          name="${target#boot/vmlinuz-}"
+          if [ ! -f "/${target}" ]; then
+            # We are removing this kernel
+            remove_kernel "${name}"
+          else
+            KERNELS+=("${name}")
+          fi
+          ;;
+        *)
+          # Another dependency; update all kernels
+          force_all=1
+          ;;
+      esac
+    done
+  else
+    # The script was run by the user
+    force_all=1
+  fi
+
+  if (( force_all )); then
+    KERNELS=("${all_kernels[@]}")
+  fi
   readonly -a KERNELS
 }
 
@@ -139,7 +180,7 @@ function main() {
   trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
-  for k in "${KERNELS[@]}"; do
+  for k in ${KERNELS+"${KERNELS[@]}"}; do
     update_kernel "$k"
   done
 
