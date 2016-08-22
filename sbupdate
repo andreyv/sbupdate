@@ -32,16 +32,19 @@ function load_config() {
     echo "$0: error: CMDLINE_DEFAULT is not defined. Set it in the configuration file." >&2
     return 1
   fi
+
+  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH EXTRA_SIGN CMDLINE_DEFAULT
+  readonly -A CMDLINE INITRD
 }
 
 # Find the location of the systemd EFI stub
 function find_efi_stub() {
   case "$(uname -m)" in
     x86_64)
-      EFISTUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"
+      readonly EFISTUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"
       ;;
     i686)
-      EFISTUB="/usr/lib/systemd/boot/efi/linuxia32.efi.stub"
+      readonly EFISTUB="/usr/lib/systemd/boot/efi/linuxia32.efi.stub"
       ;;
     *)
       echo "$0: error: unsupported architecture: $(uname -m)" >&2
@@ -54,6 +57,7 @@ function find_efi_stub() {
 function setup_initrd_prepend() {
   INITRD_PREPEND=()
   [ -f "/boot/intel-ucode.img" ] && INITRD_PREPEND+=('/boot/intel-ucode.img')
+  readonly -a INITRD_PREPEND
 }
 
 # Return output file path corresponding to a kernel
@@ -66,6 +70,7 @@ function output_name() {
 function get_kernels() {
   KERNELS=(/boot/vmlinuz-*)
   KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
+  readonly -a KERNELS
 }
 
 # Generate a signed kernel image
@@ -125,8 +130,7 @@ function main() {
   get_kernels
 
   # Create temporary files for update_kernel()
-  local INITRD_TMP="$(mktemp)"
-  local CMDLINE_TMP="$(mktemp)"
+  local INITRD_TMP="$(mktemp)" CMDLINE_TMP="$(mktemp)"
   trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
