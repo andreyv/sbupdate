@@ -56,6 +56,12 @@ function setup_initrd_prepend() {
   [ -f "/boot/intel-ucode.img" ] && INITRD_PREPEND+=('/boot/intel-ucode.img')
 }
 
+# Return output file path corresponding to a kernel
+#   $1: kernel name
+function output_name() {
+  echo "${ESP_DIR}/${OUT_DIR}/$1-signed.efi"
+}
+
 # Create a list of kernels to process
 function find_kernels() {
   KERNELS=(/boot/vmlinuz-*)
@@ -68,7 +74,7 @@ function update_kernel() {
   local image="/boot/vmlinuz-$1"
   local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
   local initrd="${INITRD[$1]:-/boot/initramfs-$1.img}"
-  local output="${ESP_DIR}/${OUT_DIR}/$1-signed.efi"
+  local output="$(output_name "$1")"
 
   echo "Generating and signing kernel image for $1..."
 
