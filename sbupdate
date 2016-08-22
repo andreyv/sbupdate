@@ -125,6 +125,11 @@ function sign_extra_file() {
 function main() {
   load_config
 
+  HOOK=0
+  if [ "$#" -eq 1 ] && [ "$1" = "--hook" ] ; then
+    HOOK=1
+  fi
+
   find_efi_stub
   setup_initrd_prepend
   get_kernels
