@@ -35,7 +35,7 @@ function load_config() {
   declare -g -A CMDLINE INITRD
   source "/etc/default/sbupdate"
 
-  if [ -z "${CMDLINE_DEFAULT+x}" ]; then
+  if [[ -z "${CMDLINE_DEFAULT+x}" ]]; then
     error "CMDLINE_DEFAULT is not defined. Set it in the configuration file."
   fi
 
@@ -49,7 +49,7 @@ function parse_args() {
   HOOK=0
 
   for arg in "$@"; do
-    if [ "${arg}" = "--hook" ]; then
+    if [[ "${arg}" == "--hook" ]]; then
       HOOK=1
     else
       error "unknown argument: ${arg}"
@@ -77,7 +77,7 @@ function find_efi_stub() {
 # Check if we need to prepend anything to the initramfs file
 function setup_initrd_prepend() {
   INITRD_PREPEND=()
-  [ -f "/boot/intel-ucode.img" ] && INITRD_PREPEND+=('/boot/intel-ucode.img')
+  [[ -f "/boot/intel-ucode.img" ]] && INITRD_PREPEND+=('/boot/intel-ucode.img')
   readonly -a INITRD_PREPEND
 }
 
@@ -85,30 +85,24 @@ function setup_initrd_prepend() {
 function get_kernels() {
   local all_kernels=(/boot/vmlinuz-*); all_kernels=("${all_kernels[@]#/boot/vmlinuz-}")
   local force_all=0
-  local name
-  KERNELS=()
-  OLD_KERNELS=()
+  declare -g -a KERNELS OLD_KERNELS
 
   if (( HOOK )); then
     # The script was run from the hook. Read standard input to determine
     # which kernels we need to update.
     while read target; do
-      case "${target}" in
-        boot/vmlinuz-*)
-          # Regular kernel
-          name="${target#boot/vmlinuz-}"
-          if [ ! -f "/${target}" ]; then
-            # We are removing this kernel
-            OLD_KERNELS+=("${name}")
-          else
-            KERNELS+=("${name}")
-          fi
-          ;;
-        *)
-          # Another dependency; update all kernels
-          force_all=1
-          ;;
-      esac
+      if [[ "${target}" =~ '^boot/vmlinuz-(.+)$' ]]; then
+        # Regular kernel
+        if [[ ! -f "/${target}" ]]; then
+          # We are removing this kernel
+          OLD_KERNELS+=("${BASH_REMATCH[1]}")
+        else
+          KERNELS+=("${BASH_REMATCH[1]}")
+        fi
+      else
+        # Another dependency; update all kernels
+        force_all=1
+      fi
     done
   else
     # The script was run by the user
@@ -147,7 +141,7 @@ function update_kernel() {
   echo "Generating and signing kernel image for $1..."
 
   # Back up existing file if present
-  if [ -f "${output}" ]; then
+  if [[ -f "${output}" ]]; then
     mv "${output}" "${output}.bak"
   fi
   
@@ -155,6 +149,7 @@ function update_kernel() {
   echo "${cmdline}" > "${CMDLINE_TMP}"
 
   # Join all initramfs files. Refer to:
+  #   https://www.kernel.org/doc/Documentation/early-userspace/buffer-format.txt
   #   https://www.kernel.org/doc/Documentation/x86/early-microcode.txt
   cat ${INITRD_PREPEND:+"${INITRD_PREPEND[@]}"} "${initrd}" > "${INITRD_TMP}"
 
