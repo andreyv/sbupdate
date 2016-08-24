@@ -61,7 +61,8 @@ function parse_args() {
 
 # Find the location of the systemd EFI stub
 function find_efi_stub() {
-  case "$(uname -m)" in
+  local uname; uname="$(uname -m)"
+  case "${uname}" in
     x86_64)
       readonly EFISTUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"
       ;;
@@ -69,7 +70,7 @@ function find_efi_stub() {
       readonly EFISTUB="/usr/lib/systemd/boot/efi/linuxia32.efi.stub"
       ;;
     *)
-      error "unsupported architecture: $(uname -m)"
+      error "unsupported architecture: ${uname}"
       ;;
   esac
 }
@@ -115,6 +116,14 @@ function get_kernels() {
   readonly -a KERNELS OLD_KERNELS
 }
 
+# Create temporary files for update_kernel()
+function create_tmpfiles() {
+  INITRD_TMP="$(mktemp)"
+  CMDLINE_TMP="$(mktemp)" || { rm -f "${INITRD_TMP}"; return 1; }
+  trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
+  readonly INITRD_TMP CMDLINE_TMP
+}
+
 # Return output file path corresponding to a kernel
 #   $1: kernel name
 function output_name() {
@@ -124,7 +133,7 @@ function output_name() {
 # Remove signed images corresponding to a kernel
 #   $1: kernel name
 function remove_kernel() {
-  local output="$(output_name "$1")"
+  local output; output="$(output_name "$1")"
 
   echo "Removing kernel image for $1..."
   rm -f "${output}" "${output}.bak"
@@ -136,7 +145,7 @@ function update_kernel() {
   local image="/boot/vmlinuz-$1"
   local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
   local initrd="${INITRD[$1]:-/boot/initramfs-$1.img}"
-  local output="$(output_name "$1")"
+  local output; output="$(output_name "$1")"
 
   echo "Generating and signing kernel image for $1..."
 
@@ -188,9 +197,7 @@ function main() {
   setup_initrd_prepend
   get_kernels
 
-  # Create temporary files for update_kernel()
-  local INITRD_TMP="$(mktemp)" CMDLINE_TMP="$(mktemp)"
-  trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
+  create_tmpfiles
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
   for k in ${OLD_KERNELS+"${OLD_KERNELS[@]}"}; do
