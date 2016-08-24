@@ -60,27 +60,13 @@ function setup_initrd_prepend() {
   readonly -a INITRD_PREPEND
 }
 
-# Return output file path corresponding to a kernel
-#   $1: kernel name
-function output_name() {
-  echo "${ESP_DIR}/${OUT_DIR}/$1-signed.efi"
-}
-
-# Remove signed images corresponding to a kernel
-#   $1: kernel name
-function remove_kernel() {
-  local output="$(output_name "$1")"
-
-  echo "Removing kernel image for $1..."
-  rm -f "${output}" "${output}.bak"
-}
-
 # Create a list of kernels to process
 function get_kernels() {
   local all_kernels=(/boot/vmlinuz-*); all_kernels=("${all_kernels[@]#/boot/vmlinuz-}")
   local force_all=0
   local name
   KERNELS=()
+  OLD_KERNELS=()
 
   if (( HOOK )); then
     # The script was run from the hook. Read standard input to determine
@@ -92,7 +78,7 @@ function get_kernels() {
           name="${target#boot/vmlinuz-}"
           if [ ! -f "/${target}" ]; then
             # We are removing this kernel
-            remove_kernel "${name}"
+            OLD_KERNELS+=("${name}")
           else
             KERNELS+=("${name}")
           fi
@@ -111,7 +97,22 @@ function get_kernels() {
   if (( force_all )); then
     KERNELS=("${all_kernels[@]}")
   fi
-  readonly -a KERNELS
+  readonly -a KERNELS OLD_KERNELS
+}
+
+# Return output file path corresponding to a kernel
+#   $1: kernel name
+function output_name() {
+  echo "${ESP_DIR}/${OUT_DIR}/$1-signed.efi"
+}
+
+# Remove signed images corresponding to a kernel
+#   $1: kernel name
+function remove_kernel() {
+  local output="$(output_name "$1")"
+
+  echo "Removing kernel image for $1..."
+  rm -f "${output}" "${output}.bak"
 }
 
 # Generate a signed kernel image
@@ -180,6 +181,9 @@ function main() {
   trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
+  for k in ${OLD_KERNELS+"${OLD_KERNELS[@]}"}; do
+    remove_kernel "$k"
+  done
   for k in ${KERNELS+"${KERNELS[@]}"}; do
     update_kernel "$k"
   done
