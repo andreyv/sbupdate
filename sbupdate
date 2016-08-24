@@ -37,6 +37,23 @@ function load_config() {
   readonly -A CMDLINE INITRD
 }
 
+# Parse script arguments
+#  $@: arguments
+function parse_args() {
+  HOOK=0
+
+  for arg in "$@"; do
+    if [ "${arg}" = "--hook" ]; then
+      HOOK=1
+    else
+      echo "$0: error: unknown argument: ${arg}" >&2
+      return 1
+    fi
+  done
+
+  readonly HOOK
+}
+
 # Find the location of the systemd EFI stub
 function find_efi_stub() {
   case "$(uname -m)" in
@@ -166,11 +183,7 @@ function sign_extra_file() {
 # Entry point
 function main() {
   load_config
-
-  HOOK=0
-  if [ "$#" -eq 1 ] && [ "$1" = "--hook" ] ; then
-    HOOK=1
-  fi
+  parse_args "$@"
 
   find_efi_stub
   setup_initrd_prepend
