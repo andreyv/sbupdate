@@ -18,6 +18,13 @@
 
 set -eu
 
+# Print an error and return unsuccessfully
+#  $1: error message
+function error() {
+  echo "$0: error: $1" >&2
+  return 1
+}
+
 # Load configuration
 function load_config() {
   KEY_DIR="/root/secure-boot"
@@ -29,8 +36,7 @@ function load_config() {
   source "/etc/default/sbupdate"
 
   if [ -z "${CMDLINE_DEFAULT+x}" ]; then
-    echo "$0: error: CMDLINE_DEFAULT is not defined. Set it in the configuration file." >&2
-    return 1
+    error "CMDLINE_DEFAULT is not defined. Set it in the configuration file."
   fi
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH EXTRA_SIGN CMDLINE_DEFAULT
@@ -46,8 +52,7 @@ function parse_args() {
     if [ "${arg}" = "--hook" ]; then
       HOOK=1
     else
-      echo "$0: error: unknown argument: ${arg}" >&2
-      return 1
+      error "unknown argument: ${arg}"
     fi
   done
 
@@ -64,8 +69,7 @@ function find_efi_stub() {
       readonly EFISTUB="/usr/lib/systemd/boot/efi/linuxia32.efi.stub"
       ;;
     *)
-      echo "$0: error: unsupported architecture: $(uname -m)" >&2
-      return 1
+      error "unsupported architecture: $(uname -m)"
       ;;
   esac
 }
