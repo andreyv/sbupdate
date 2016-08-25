@@ -81,9 +81,10 @@ need to be on the ESP before they are signed. The tool has no provision to
 verify the authenticity of additional files at this point. If this is a concern,
 you may wish to use direct booting instead.
 
-## Further reading
+## Related resources
 
 * https://wiki.archlinux.org/index.php/Unified_Extensible_Firmware_Interface
 * https://wiki.archlinux.org/index.php/Secure_Boot
 * http://www.rodsbooks.com/efi-bootloaders/index.html
 * https://bentley.link/secureboot/
+* [gdamjan/secure-boot](/gdamjan/secure-boot) — a similar project
