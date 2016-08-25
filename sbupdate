@@ -38,9 +38,8 @@ function load_config() {
   # shellcheck disable=SC1090
   source "${CONFFILE}"
 
-  if [[ -z "${CMDLINE_DEFAULT+x}" ]]; then
-    error "CMDLINE_DEFAULT is not defined in ${CONFFILE}"
-  fi
+  [[ -d "${ESP_DIR}" ]] || error "${ESP_DIR} does not exist"
+  [[ -n "${CMDLINE_DEFAULT+x}" ]] || error "CMDLINE_DEFAULT is not defined in ${CONFFILE}"
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH EXTRA_SIGN CMDLINE_DEFAULT
   readonly -A CMDLINE INITRD
