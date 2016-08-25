@@ -33,6 +33,7 @@ function load_config() {
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   EXTRA_SIGN=()
   declare -g -A CMDLINE INITRD
+  # shellcheck disable=SC1091
   source "/etc/default/sbupdate"
 
   if [[ -z "${CMDLINE_DEFAULT+x}" ]]; then
@@ -91,8 +92,8 @@ function get_kernels() {
   if (( HOOK )); then
     # The script was run from the hook. Read standard input to determine
     # which kernels we need to update.
-    while read target; do
-      if [[ "${target}" =~ '^boot/vmlinuz-(.+)$' ]]; then
+    while read -r target; do
+      if [[ "${target}" =~ ^boot/vmlinuz-(.+)$ ]]; then
         # Regular kernel
         if [[ ! -f "/${target}" ]]; then
           # We are removing this kernel
@@ -120,7 +121,7 @@ function get_kernels() {
 function create_tmpfiles() {
   INITRD_TMP="$(mktemp)"
   CMDLINE_TMP="$(mktemp)" || { rm -f "${INITRD_TMP}"; return 1; }
-  trap "rm -f '${INITRD_TMP}' '${CMDLINE_TMP}'" EXIT
+  trap 'rm -f "${INITRD_TMP}" "${CMDLINE_TMP}"' EXIT
   readonly INITRD_TMP CMDLINE_TMP
 }
 
