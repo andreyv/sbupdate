@@ -18,6 +18,8 @@
 
 set -eu
 
+readonly CONFFILE="/etc/default/sbupdate"
+
 # Print an error and return unsuccessfully
 #  $1: error message
 function error() {
@@ -33,11 +35,11 @@ function load_config() {
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   EXTRA_SIGN=()
   declare -g -A CMDLINE INITRD
-  # shellcheck disable=SC1091
-  source "/etc/default/sbupdate"
+  # shellcheck disable=SC1090
+  source "${CONFFILE}"
 
   if [[ -z "${CMDLINE_DEFAULT+x}" ]]; then
-    error "CMDLINE_DEFAULT is not defined. Set it in the configuration file."
+    error "CMDLINE_DEFAULT is not defined in ${CONFFILE}"
   fi
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH EXTRA_SIGN CMDLINE_DEFAULT
