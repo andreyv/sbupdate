@@ -87,4 +87,4 @@ you may wish to use direct booting instead.
 * https://wiki.archlinux.org/index.php/Secure_Boot
 * http://www.rodsbooks.com/efi-bootloaders/index.html
 * https://bentley.link/secureboot/
-* [gdamjan/secure-boot](/gdamjan/secure-boot) — a similar project
+* https://github.com/gdamjan/secure-boot — a similar project
