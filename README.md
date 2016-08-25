@@ -1,6 +1,6 @@
 # sbupdate
 
-A tool to generate and sign kernel images for UEFI Secure Boot on Arch Linux.
+A tool to generate and sign kernel images for UEFI Secure Boot on Arch Linux
 
 ## Installation
 
@@ -64,7 +64,7 @@ custom keys. Add corresponding filenames to the `EXTRA_SIGN` array in
     EXTRA_SIGN=('/boot/EFI/BOOT/BOOTX64.EFI' '/boot/EFI/systemd/systemd-bootx64.efi')
 
 and re-run the tool if needed. You should remember to run the tool every time
-you update the boot manager's files (e.g., after `sudo bootctl update`).
+you update your boot manager's files (e. g., after `sudo bootctl update`).
 
 ## ESP mount point
 
