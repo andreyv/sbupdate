@@ -61,7 +61,7 @@ You also need to sign your boot manager's own UEFI executables with your
 custom keys. Add corresponding filenames to the `EXTRA_SIGN` array in
 `/etc/default/sbupdate`, for example (systemd-boot):
 
-    EXTRA_SIGN=('/boot/EFI/Boot/BOOTX64.EFI' '/boot/EFI/systemd/systemd-bootx64.efi')
+    EXTRA_SIGN=('/boot/EFI/BOOT/BOOTX64.EFI' '/boot/EFI/systemd/systemd-bootx64.efi')
 
 and re-run the tool if needed. You should remember to run the tool every time
 you update the boot manager's files (e.g., after `sudo bootctl update`).
@@ -70,7 +70,7 @@ you update the boot manager's files (e.g., after `sudo bootctl update`).
 
 Typically ESP is mounted on `/boot` and contains also the original, unsigned
 files such as the Linux kernel image and initramfs. You may choose to mount ESP
-on a different directory (for example, `/boot/esp`) and keep `/boot` itself on
+on a different directory (for example, `/boot/efi`) and keep `/boot` itself on
 the secure root file system. This way ESP will only contain signed images which
 cannot be tampered with.
 
