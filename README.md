@@ -1,6 +1,6 @@
 # sbupdate
 
-A tool to generate and sign kernel images for UEFI Secure Boot on Arch Linux
+This tool allows you to sign Arch Linux kernels using your own Secure Boot keys.
 
 ## Installation
 
