@@ -5,11 +5,7 @@ Operation = Remove
 Type = File
 Target = boot/vmlinuz-linux*
 Target = boot/intel-ucode.img
-
-[Trigger]
-Operation = Install
-Operation = Upgrade
-Type = File
+Target = usr/lib/initcpio/*
 Target = usr/lib/systemd/boot/efi/linux*.efi.stub
 Target = usr/share/systemd/bootctl/splash-arch.bmp
 
