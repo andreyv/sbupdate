@@ -10,6 +10,7 @@
 # SPLASH           Splash image file
 # EXTRA_SIGN       An array of additional files to sign
 # CMDLINE_DEFAULT  Default kernel command line (REQUIRED)
+# CREATE_BACKUP    Whether or not to create a kernel backup under OUT_DIR
 
 #KEY_DIR="/root/secure-boot"
 #ESP_DIR="/boot"
@@ -17,6 +18,7 @@
 #SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
 #EXTRA_SIGN=()
 #CMDLINE_DEFAULT=""
+#CREATE_BACKUP=true
 
 # Per-kernel configuration
 #

@@ -34,6 +34,7 @@ function load_config() {
   OUT_DIR="EFI/Arch"
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   EXTRA_SIGN=()
+  CREATE_BACKUP=true
   declare -g -A CMDLINE INITRD
   # shellcheck disable=SC1090
   source "${CONFFILE}"
@@ -153,7 +154,7 @@ function update_kernel() {
   echo "Generating and signing kernel image for $1..."
 
   # Back up existing file if present
-  if [[ -f "${output}" ]]; then
+  if ${CREATE_BACKUP} && [[ -f "${output}" ]]; then
     mv "${output}" "${output}.bak"
   fi
   
