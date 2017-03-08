@@ -33,6 +33,7 @@ function load_config() {
   ESP_DIR="/boot"
   OUT_DIR="EFI/Arch"
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
+  BACKUP=1
   EXTRA_SIGN=()
   declare -g -A CMDLINE INITRD
   # shellcheck disable=SC1090
@@ -42,7 +43,7 @@ function load_config() {
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] \
     || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
 
-  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH EXTRA_SIGN CMDLINE_DEFAULT
+  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN CMDLINE_DEFAULT
   readonly -A CMDLINE INITRD
 }
 
@@ -153,7 +154,7 @@ function update_kernel() {
   echo "Generating and signing kernel image for $1..."
 
   # Back up existing file if present
-  if [[ -f "${output}" ]]; then
+  if (( BACKUP )) && [[ -f "${output}" ]]; then
     mv "${output}" "${output}.bak"
   fi
   
