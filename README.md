@@ -66,6 +66,11 @@ custom keys. Add corresponding filenames to the `EXTRA_SIGN` array in
 and re-run the tool if needed. You should remember to run the tool every time
 you update your boot manager's files (e. g., after `sudo bootctl update`).
 
+**Note**: when booting with Secure Boot disabled, options passed from an EFI shell
+(even empty) may override the built-in command line in the combined image, and
+the boot may fail. See https://github.com/andreyv/sbupdate/issues/4.
+
+
 ## ESP mount point
 
 Typically ESP is mounted on `/boot` and contains also the original, unsigned
