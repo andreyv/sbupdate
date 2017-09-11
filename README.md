@@ -68,7 +68,7 @@ you update your boot manager's files (e. g., after `sudo bootctl update`).
 
 **Note**: when booting with Secure Boot disabled, options passed from an EFI shell
 (even empty) may override the built-in command line in the combined image, and
-the boot may fail. See https://github.com/andreyv/sbupdate/issues/4.
+the boot may fail. See [#4](https://github.com/andreyv/sbupdate/issues/4).
 
 
 ## ESP mount point
