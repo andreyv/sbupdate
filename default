@@ -5,6 +5,8 @@
 # Common settings
 #
 # KEY_DIR          Directory with the custom Secure Boot keys
+# KEYFILE          Database key (private)
+# CRTFILE          Database key (public)
 # ESP_DIR          EFI System Partition location
 # OUT_DIR          Relative path on ESP for signed kernel images
 # SPLASH           Splash image file
@@ -13,6 +15,8 @@
 # CMDLINE_DEFAULT  Default kernel command line (REQUIRED)
 
 #KEY_DIR="/root/secure-boot"
+#KEYFILE="DB.key"
+#CRTFILE="DB.crt"
 #ESP_DIR="/boot"
 #OUT_DIR="EFI/Arch"
 #SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
