@@ -5,6 +5,8 @@
 # Common settings
 #
 # KEY_DIR          Directory with the custom Secure Boot keys
+# KEYFILE          Acctual Filename of DB.key
+# CRTFILE          Acctual Filename of DB.crt
 # ESP_DIR          EFI System Partition location
 # OUT_DIR          Relative path on ESP for signed kernel images
 # SPLASH           Splash image file
@@ -12,6 +14,8 @@
 # EXTRA_SIGN       An array of additional files to sign
 # CMDLINE_DEFAULT  Default kernel command line (REQUIRED)
 
+#KEYFILE="DB.key"
+#CRTFILE="DB.crt"
 #KEY_DIR="/root/secure-boot"
 #ESP_DIR="/boot"
 #OUT_DIR="EFI/Arch"

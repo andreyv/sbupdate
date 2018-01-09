@@ -30,6 +30,8 @@ function error() {
 # Load configuration
 function load_config() {
   KEY_DIR="/root/secure-boot"
+  KEYFILE="DB.key"
+  CRTFILE="DB.crt"
   ESP_DIR="/boot"
   OUT_DIR="EFI/Arch"
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
@@ -43,7 +45,7 @@ function load_config() {
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] \
     || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
 
-  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN CMDLINE_DEFAULT
+  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN CMDLINE_DEFAULT KEYFILE CRTFILE
   readonly -A CMDLINE INITRD
 }
 
@@ -178,17 +180,17 @@ function update_kernel() {
     "${EFISTUB}" "${output}"
 
   # Sign the resulting output file
-  sbsign --key "${KEY_DIR}/DB.key" --cert "${KEY_DIR}/DB.crt" --output "${output}" "${output}"
+  sbsign --key "${KEY_DIR}/${KEYFILE}" --cert "${KEY_DIR}/${CRTFILE}" --output "${output}" "${output}"
 }
 
 # Sign a user-specified extra file
 #   $1: file path
 function sign_extra_file() {
-  if sbverify --cert "${KEY_DIR}/DB.crt" "$1" >/dev/null 2>&1; then
+  if sbverify --cert "${KEY_DIR}/${CRTFILE}" "$1" >/dev/null 2>&1; then
     echo "Skipping already signed file $1"
   else
     echo "Signing $1..."
-    sbsign --key "${KEY_DIR}/DB.key" --cert "${KEY_DIR}/DB.crt" --output "$1" "$1"
+    sbsign --key "${KEY_DIR}/${KEYFILE}" --cert "${KEY_DIR}/${CRTFILE}" --output "$1" "$1"
   fi
 }
 
