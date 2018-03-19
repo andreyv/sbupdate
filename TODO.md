@@ -1,3 +1,5 @@
+- [ ] Use getopt(1) for argument parsing
+- [ ] Avoid creating backup if the new image is the same as the current one
 - [ ] Support multiple initramfs per kernel
 - [ ] Consider supporting `kernel-install(8)`
   * What to do with the default `90-loaderentry.install`?
