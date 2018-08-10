@@ -33,7 +33,7 @@ The following settings are available:
 * Locations of the key, ESP and output directories
 * Boot splash image
 
-Edit the file `/etc/default/sbupdate` to change the settings. Note: you **must**
+Edit the file `/etc/default/sbupdate` to change the settings. ⚠️ **Note**: you _must_
 set your default kernel command line in the `CMDLINE_DEFAULT` variable.
 
 <a name="intel-ucode"><sup>1</sup></a> Intel microcode updates are handled
@@ -66,7 +66,7 @@ custom keys. Add corresponding filenames to the `EXTRA_SIGN` array in
 and re-run the tool if needed. You should remember to run the tool every time
 you update your boot manager's files (e. g., after `sudo bootctl update`).
 
-**Note**: when booting with Secure Boot disabled, options passed from an EFI shell
+⚠️ **Note**: when booting with Secure Boot disabled, options passed from an EFI shell
 (even empty) may override the built-in command line in the combined image, and
 the boot may fail. See [#4](https://github.com/andreyv/sbupdate/issues/4).
 
