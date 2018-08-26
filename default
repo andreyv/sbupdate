@@ -9,7 +9,7 @@
 # CRTFILE          Database key (public)
 # ESP_DIR          EFI System Partition location
 # OUT_DIR          Relative path on ESP for signed kernel images
-# SPLASH           Splash image file
+# SPLASH           Splash image file. Use "/dev/null" to disable splash.
 # BACKUP           Whether to back up old signed kernel images
 # EXTRA_SIGN       An array of additional files to sign
 # CMDLINE_DEFAULT  Default kernel command line (REQUIRED)
