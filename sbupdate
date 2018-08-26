@@ -166,7 +166,7 @@ function update_kernel() {
   # Join all initramfs files. Refer to:
   #   https://www.kernel.org/doc/Documentation/early-userspace/buffer-format.txt
   #   https://www.kernel.org/doc/Documentation/x86/early-microcode.txt
-  cat ${INITRD_PREPEND:+"${INITRD_PREPEND[@]}"} "${initrd}" > "${INITRD_TMP}"
+  cat "${INITRD_PREPEND[@]}" "${initrd}" > "${INITRD_TMP}"
 
   # Create a combined binary with systemd EFI stub. For additional information see:
   #   https://github.com/systemd/systemd/blob/master/src/boot/efi/stub.c
@@ -206,15 +206,15 @@ function main() {
   create_tmpfiles
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
-  for k in ${OLD_KERNELS+"${OLD_KERNELS[@]}"}; do
+  for k in "${OLD_KERNELS[@]}"; do
     remove_kernel "$k"
   done
-  for k in ${KERNELS+"${KERNELS[@]}"}; do
+  for k in "${KERNELS[@]}"; do
     update_kernel "$k"
   done
 
   if (( ! HOOK )); then
-    for f in ${EXTRA_SIGN:+"${EXTRA_SIGN[@]}"}; do
+    for f in "${EXTRA_SIGN[@]}"; do
       sign_extra_file "$f"
     done
   fi
