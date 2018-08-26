@@ -1,4 +1,4 @@
-- [ ] Simplify array expansions (fixed in Bash 4.4)
+- [x] Simplify array expansions (fixed in Bash 4.4)
 - [ ] Consider using pipes instead of temporary files
 - [ ] Use `getopt(1)` for argument parsing
 - [ ] Avoid creating backup if the new image is the same as the current one
