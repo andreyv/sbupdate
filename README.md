@@ -7,7 +7,7 @@ This tool allows you to sign Arch Linux kernels using your own Secure Boot keys.
 You should be familiar with the process of creating, installing and using
 custom Secure Boot keys. See:
 * https://wiki.archlinux.org/index.php/Secure_Boot
-* http://www.rodsbooks.com/efi-bootloaders/controlling-sb.html
+* https://www.rodsbooks.com/efi-bootloaders/controlling-sb.html
 
 After you have generated your custom keys, proceed with setup:
 * Install [sbupdate-git](https://aur.archlinux.org/packages/sbupdate-git/) from AUR
@@ -90,6 +90,6 @@ you should use direct booting instead.
 
 * https://wiki.archlinux.org/index.php/Unified_Extensible_Firmware_Interface
 * https://wiki.archlinux.org/index.php/Secure_Boot
-* http://www.rodsbooks.com/efi-bootloaders/index.html
+* https://www.rodsbooks.com/efi-bootloaders/index.html
 * https://bentley.link/secureboot/
 * https://github.com/gdamjan/secure-boot — a similar project
