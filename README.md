@@ -7,7 +7,7 @@ This tool allows you to sign Arch Linux kernels using your own Secure Boot keys.
 You should be familiar with the process of creating, installing and using
 custom Secure Boot keys. See:
 * https://wiki.archlinux.org/index.php/Secure_Boot
-* http://www.rodsbooks.com/efi-bootloaders/controlling-sb.html
+* https://www.rodsbooks.com/efi-bootloaders/controlling-sb.html
 
 After you have generated your custom keys, proceed with setup:
 * Install [sbupdate-git](https://aur.archlinux.org/packages/sbupdate-git/) from AUR
@@ -17,7 +17,7 @@ After you have generated your custom keys, proceed with setup:
 
 For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated in
 `<ESP>/EFI/Arch/<NAME>-signed.efi`, where `<ESP>` is typically `/boot`. Now
-you can add these images to your UEFI firmware or boot manager configuration.
+you can [add these images](#direct-booting-vs-boot-manager) to your UEFI firmware or boot manager configuration.
 
 After the initial setup, signed images will be (re)generated automatically when
 you install or update kernels using Pacman.
@@ -50,7 +50,7 @@ to set up and use. See [Using UEFI directly](https://wiki.archlinux.org/index.ph
 in the above article, with the exception that the kernel command line does not
 need to be specified in this case.
 
-If you choose to use a boot manager, you need to add the generated UEFI
+Alternatively, you can use a boot manager. In this case you need to add the generated UEFI
 images to the boot manager configuration. For systemd-boot, the basic entry
 format is
 
@@ -67,7 +67,7 @@ and re-run the tool if needed. You should remember to run the tool every time
 you update your boot manager's files (e. g., after `sudo bootctl update`).
 
 ⚠️ **Note**: when booting with Secure Boot disabled, options passed from an EFI shell
-(even empty) may override the built-in command line in the combined image, and
+(_even empty_) may override the built-in command line in the combined image, and
 the boot may fail. See [#4](https://github.com/andreyv/sbupdate/issues/4).
 
 
@@ -84,12 +84,12 @@ See [Configuration](#configuration) to change the ESP directory.
 Note that if you use a boot manager such as systemd-boot, then its files still
 need to be on the ESP before they are signed. The tool has no provision to
 verify the authenticity of additional files at this point. If this is a concern,
-you may wish to use direct booting instead.
+you should use direct booting instead.
 
 ## Related resources
 
 * https://wiki.archlinux.org/index.php/Unified_Extensible_Firmware_Interface
 * https://wiki.archlinux.org/index.php/Secure_Boot
-* http://www.rodsbooks.com/efi-bootloaders/index.html
+* https://www.rodsbooks.com/efi-bootloaders/index.html
 * https://bentley.link/secureboot/
 * https://github.com/gdamjan/secure-boot — a similar project
