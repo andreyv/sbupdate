@@ -28,7 +28,7 @@ the signed UEFI image.
 ## Configuration
 
 The following settings are available:
-* Command line and initramfs[<sup>1</sup>](#intel-ucode) for each specified kernel
+* Command line and initramfs[<sup>1</sup>](#ucode) for each specified kernel
 * A list of additional boot files to sign
 * Locations of the key, ESP and output directories
 * Boot splash image
@@ -36,7 +36,7 @@ The following settings are available:
 Edit the file `/etc/default/sbupdate` to change the settings. ⚠️ **Note**: you _must_
 set your default kernel command line in the `CMDLINE_DEFAULT` variable.
 
-<a name="intel-ucode"><sup>1</sup></a> Intel microcode updates are handled
+<a name="ucode"><sup>1</sup></a> Intel and AMD microcode updates are handled
 automatically.
 
 ## Direct booting vs. boot manager
