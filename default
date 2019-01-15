@@ -35,5 +35,5 @@
 #
 # Example: CMDLINE["linux-lts"]="custom command line"
 #
-# Note: Intel microcode updates are handled automatically and do not
-# need to be specified in INITRD.
+# Note: Intel and AMD microcode updates are handled automatically and
+# do not need to be specified in INITRD.

@@ -85,6 +85,7 @@ function find_efi_stub() {
 function setup_initrd_prepend() {
   INITRD_PREPEND=()
   [[ -f "/boot/intel-ucode.img" ]] && INITRD_PREPEND+=('/boot/intel-ucode.img')
+  [[ -f "/boot/amd-ucode.img" ]] && INITRD_PREPEND+=('/boot/amd-ucode.img')
   readonly -a INITRD_PREPEND
 }
 
