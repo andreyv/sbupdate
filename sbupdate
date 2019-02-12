@@ -146,15 +146,17 @@ function remove_kernel() {
   rm -f "${output}" "${output}.bak"
 }
 
-# Generate a signed kernel image
+# Generate a signed kernel image for the kernel and initramfs
 #   $1: kernel name
-function update_kernel() {
+#   $2: initrd filepath
+#   #3: output name
+function update_kernel_with_initrd() {
   local image="/boot/vmlinuz-$1"
+  local initrd="${INITRD[$1]:-$2}"
   local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
-  local initrd="${INITRD[$1]:-/boot/initramfs-$1.img}"
-  local output; output="$(output_name "$1")"
+  local output="${3}"
 
-  echo "Generating and signing kernel image for $1..."
+  echo "Generating and signing kernel image for $output..."
 
   # Back up existing file if present
   if (( BACKUP )) && [[ -f "${output}" ]]; then
@@ -182,6 +184,21 @@ function update_kernel() {
 
   # Sign the resulting output file
   sbsign --key "${KEY_DIR}/${KEYFILE}" --cert "${KEY_DIR}/${CRTFILE}" --output "${output}" "${output}"
+}
+
+# Generate a signed kernel image for the initrd and fallback initrd if it exits
+#   $1: kernel name
+function update_kernel() {
+  local initrd="${INITRD[$1]:-/boot/initramfs-$1.img}"
+  local output="$(output_name "$1")"
+  local fallback_initrd="${INITRD[$1]:-/boot/initramfs-$1-fallback.img}"
+  local fallback_output="$(output_name "$1-fallback")"
+  update_kernel_with_initrd "$1" "$initrd" "$output"
+  if [ "${initrd}" != "${fallback_initrd}" ]; then
+    if test -f "${fallback_initrd}"; then
+      update_kernel_with_initrd "$1" "$fallback_initrd" "$fallback_output"
+    fi
+  fi
 }
 
 # Sign a user-specified extra file
