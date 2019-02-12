@@ -16,8 +16,11 @@ After you have generated your custom keys, proceed with setup:
 * Run `sudo sbupdate` for first-time image generation
 
 For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated in
-`<ESP>/EFI/Arch/<NAME>-signed.efi`, where `<ESP>` is typically `/boot`. Now
-you can [add these images](#direct-booting-vs-boot-manager) to your UEFI firmware or boot manager configuration.
+`<ESP>/EFI/Arch/<NAME>-signed.efi`, where `<ESP>` is typically `/boot`. If
+there are multiple initramfs configured (e.g. `/boot/initramfs-<KERNEL>-<INITRD>.img`),
+`<ESP>/EFI/Arch/<KERNEL>-<INITRD>-signed.efi` will be created for each initrd.
+Now you can [add these images](#direct-booting-vs-boot-manager)
+to your UEFI firmware or boot manager configuration.
 
 After the initial setup, signed images will be (re)generated automatically when
 you install or update kernels using Pacman.
@@ -28,7 +31,7 @@ the signed UEFI image.
 ## Configuration
 
 The following settings are available:
-* Command line and initramfs[<sup>1</sup>](#ucode) for each specified kernel
+* Command line and multiple initramfs[<sup>1</sup>](#ucode) for each specified kernel
 * A list of additional boot files to sign
 * Locations of the key, ESP and output directories
 * Boot splash image
