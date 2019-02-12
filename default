@@ -30,10 +30,12 @@
 #
 #   CMDLINE[<NAME>]="..."  # Alternative kernel command line
 #                          # Default value: ${CMDLINE_DEFAULT}
-#   INITRD[<NAME>]="..."   # Alternative initramfs file
+#   INITRD[<NAME>]="..."   # Alternative initramfs files (space separated)
 #                          # Default value: /boot/initramfs-<NAME>.img
 #
-# Example: CMDLINE["linux-lts"]="custom command line"
+# Examples:
+#   CMDLINE["linux-lts"]="custom command line"
+#   INITRD["linux"]="/boot/initramfs-linux.img /boot/initramfs-linux-fallback.img"
 #
 # Note: Intel and AMD microcode updates are handled automatically and
 # do not need to be specified in INITRD.
