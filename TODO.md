@@ -9,3 +9,5 @@
 - [ ] Move `/etc/default/sbupdate` to `/etc/sbupdate.conf`?
 - [ ] Generalize initrd prepend mechanism
 - [ ] Recognize `DB.key` and `db.key` automatically using `extglob`. Consider removing `KEYFILE` and `CRTFILE` options for less clutter.
+- [ ] Add tests (how?)
+- [ ] Add continuous integration
