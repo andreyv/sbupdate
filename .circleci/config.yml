@@ -1,0 +1,13 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: archlinux/base:latest
+    steps:
+      - run:
+          name: Update and install dependencies
+          command: pacman -Syu --noconfirm --noprogressbar git openssh shellcheck
+      - checkout
+      - run:
+          name: Analyze shell scripts
+          command: shellcheck sbupdate
