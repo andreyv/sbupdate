@@ -17,12 +17,11 @@ After you have generated your custom keys, proceed with setup:
 * Configure `/etc/default/sbupdate` (see [Configuration](#configuration))
 * Run `sudo sbupdate` for first-time image generation
 
-For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated in
-`<ESP>/EFI/Arch/<NAME>-signed.efi`, where `<ESP>` is typically `/boot`. If
-there are multiple initramfs configured (e.g., `/boot/initramfs-<KERNEL>-<INITRD>.img`),
-`<ESP>/EFI/Arch/<KERNEL>-<INITRD>-signed.efi` will be created for each initramfs.
-Now you can [add these images](#direct-booting-vs-boot-manager)
-to your UEFI firmware or boot manager configuration.
+For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated,
+by default in `/boot/EFI/Arch/<NAME>-signed.efi`. Additional images can be
+generated if multiple initramfs are configured. Now you can
+[add these images](#direct-booting-vs-boot-manager) to your UEFI firmware or
+boot manager configuration.
 
 After the initial setup, signed images will be (re)generated automatically when
 you install or update kernels using Pacman.
@@ -87,9 +86,9 @@ cannot be tampered with.
 See [Configuration](#configuration) to change the ESP directory.
 
 Note that if you use a boot manager such as systemd-boot, then its files still
-need to be on the ESP before they are signed. The tool has no provision to
-verify the authenticity of additional files at this point. If this is a concern,
-you should use direct booting instead.
+need to be on the ESP before they are signed. It is customary to sign these
+files right after they have been installed on the ESP. Direct booting is
+recommended for increased security.
 
 ## Related resources
 
