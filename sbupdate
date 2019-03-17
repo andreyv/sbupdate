@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # sbupdate -- Generate and sign kernel images for UEFI Secure Boot on Arch Linux
-# Copyright (C) 2016 Andrey Vihrov <andrey.vihrov@gmail.com>
+# Copyright (C) 2016-2019 Andrey Vihrov <andrey.vihrov@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -123,7 +123,7 @@ function get_kernels() {
   readonly -a KERNELS OLD_KERNELS
 }
 
-# Create temporary files for update_kernel()
+# Create temporary files for update_image()
 function create_tmpfiles() {
   INITRD_TMP="$(mktemp)"
   CMDLINE_TMP="$(mktemp)" || { rm -f "${INITRD_TMP}"; return 1; }
@@ -131,35 +131,33 @@ function create_tmpfiles() {
   readonly INITRD_TMP CMDLINE_TMP
 }
 
-# Return output file path corresponding to a kernel
+# Return output file path corresponding to a kernel/initrd pair
 #   $1: kernel name
 #   $2: initrd file name
 function output_name() {
-  [[ "$2" =~ /boot/initramfs-$1([a-z-]*).img ]] || \
+  if [[ "$2" =~ /boot/initramfs-$1([a-z-]*).img ]]; then
+    echo "${ESP_DIR}/${OUT_DIR}/$1${BASH_REMATCH[1]}-signed.efi"
+  else
     error "invalid initramfs '$2' for kernel $1"
-  echo "${ESP_DIR}/${OUT_DIR}/$1${BASH_REMATCH[1]}-signed.efi"
+  fi
 }
 
-# Remove signed images corresponding to a kernel
+# Remove a signed kernel image
 #   $1: kernel name
-function remove_kernel() {
-  local initrds="${INITRD[$1]:-/boot/initramfs-$1.img}"
-  local output
-  echo "Removing kernel images for $1..."
-  for initrd in ${initrds}; do
-    output="$(output_name "$1" "${initrd}")"
-    rm -f "${output}" "${output}.bak"
-  done
+#   $2: initrd file name
+function remove_image() {
+  local output; output="$(output_name "$1" "$2")"
+  echo "Removing $(basename "${output}")"
+  rm -f "${output}" "${output}.bak"
 }
 
-# Generate a signed kernel image for the kernel and initramfs
+# Generate a signed kernel image
 #   $1: kernel name
-#   $2: initrd file path
-#   #3: output name
-function update_kernel_with_initrd() {
-  local image="/boot/vmlinuz-$1"
+#   $2: initrd file name
+function update_image() {
+  local linux="/boot/vmlinuz-$1"
   local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
-  local output="${3}"
+  local output; output="$(output_name "$1" "$2")"
 
   echo "Generating and signing $(basename "${output}")"
 
@@ -174,7 +172,7 @@ function update_kernel_with_initrd() {
   # Join all initramfs files. Refer to:
   #   https://www.kernel.org/doc/Documentation/early-userspace/buffer-format.txt
   #   https://www.kernel.org/doc/Documentation/x86/early-microcode.txt
-  cat "${INITRD_PREPEND[@]}" "${2}" > "${INITRD_TMP}"
+  cat "${INITRD_PREPEND[@]}" "$2" > "${INITRD_TMP}"
 
   # Create a combined binary with systemd EFI stub. For additional information see:
   #   https://github.com/systemd/systemd/blob/master/src/boot/efi/stub.c
@@ -183,7 +181,7 @@ function update_kernel_with_initrd() {
     --add-section .osrel="/etc/os-release"  --change-section-vma .osrel=0x20000    \
     --add-section .cmdline="${CMDLINE_TMP}" --change-section-vma .cmdline=0x30000  \
     --add-section .splash="${SPLASH}"       --change-section-vma .splash=0x40000   \
-    --add-section .linux="${image}"         --change-section-vma .linux=0x2000000  \
+    --add-section .linux="${linux}"         --change-section-vma .linux=0x2000000  \
     --add-section .initrd="${INITRD_TMP}"   --change-section-vma .initrd=0x3000000 \
     "${EFISTUB}" "${output}"
 
@@ -191,14 +189,13 @@ function update_kernel_with_initrd() {
   sbsign --key "${KEY_DIR}/${KEYFILE}" --cert "${KEY_DIR}/${CRTFILE}" --output "${output}" "${output}"
 }
 
-# Generate a signed kernel image for each initrd
-#   $1: kernel name
-function update_kernel() {
-  local initrds="${INITRD[$1]:-/boot/initramfs-$1.img}"
-  local output
-  for initrd in ${initrds}; do
-    output="$(output_name "$1" "${initrd}")"
-    update_kernel_with_initrd "$1" "${initrd}" "${output}"
+# Process changes for a kernel
+#   $1: operation (remove_image or update_image)
+#   $2: kernel name
+function process_kernel() {
+  local initrds="${INITRD[$2]:-/boot/initramfs-$2.img}"
+  for initrd in ${initrds}; do # Note: unquoted expansion
+    "$1" "$2" "${initrd}"
   done
 }
 
@@ -208,7 +205,7 @@ function sign_extra_file() {
   if sbverify --cert "${KEY_DIR}/${CRTFILE}" "$1" >/dev/null 2>&1; then
     echo "Skipping already signed file $1"
   else
-    echo "Signing $1..."
+    echo "Signing $1"
     sbsign --key "${KEY_DIR}/${KEYFILE}" --cert "${KEY_DIR}/${CRTFILE}" --output "$1" "$1"
   fi
 }
@@ -226,10 +223,10 @@ function main() {
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
   for k in "${OLD_KERNELS[@]}"; do
-    remove_kernel "$k"
+    process_kernel remove_image "$k"
   done
   for k in "${KERNELS[@]}"; do
-    update_kernel "$k"
+    process_kernel update_image "$k"
   done
 
   if (( ! HOOK )); then
