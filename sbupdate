@@ -199,11 +199,14 @@ function process_kernel() {
   done
 }
 
-# Sign a user-specified extra file
+# Check and sign a user-specified extra file
 #   $1: file path
-function sign_extra_file() {
+function check_sign_extra_file() {
   if sbverify --cert "${KEY_DIR}/${CRTFILE}" "$1" >/dev/null 2>&1; then
     echo "Skipping already signed file $1"
+  elif (( HOOK )); then
+    # Signing extra files from the hook is prohibited for security reasons
+    echo "warning: failed to verify $1" >&2
   else
     echo "Signing $1"
     sbsign --key "${KEY_DIR}/${KEYFILE}" --cert "${KEY_DIR}/${CRTFILE}" --output "$1" "$1"
@@ -229,11 +232,9 @@ function main() {
     process_kernel update_image "$k"
   done
 
-  if (( ! HOOK )); then
-    for f in "${EXTRA_SIGN[@]}"; do
-      sign_extra_file "$f"
-    done
-  fi
+  for f in "${EXTRA_SIGN[@]}"; do
+    check_sign_extra_file "$f"
+  done
 }
 
 main "$@"
