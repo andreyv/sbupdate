@@ -18,6 +18,8 @@
 
 set -eu
 
+shopt -s extglob
+
 readonly CONFFILE="/etc/default/sbupdate"
 
 # Print an error and return unsuccessfully
@@ -30,8 +32,6 @@ function error() {
 # Load configuration
 function load_config() {
   KEY_DIR="/root/secure-boot"
-  KEYFILE="DB.key"
-  CRTFILE="DB.crt"
   ESP_DIR="/boot"
   OUT_DIR="EFI/Arch"
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
@@ -186,7 +186,7 @@ function update_image() {
     "${EFISTUB}" "${output}"
 
   # Sign the resulting output file
-  sbsign --key "${KEY_DIR}/${KEYFILE}" --cert "${KEY_DIR}/${CRTFILE}" --output "${output}" "${output}"
+  sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "${output}" "${output}"
 }
 
 # Process changes for a kernel
@@ -209,7 +209,7 @@ function check_sign_extra_file() {
     echo "warning: failed to verify $1" >&2
   else
     echo "Signing $1"
-    sbsign --key "${KEY_DIR}/${KEYFILE}" --cert "${KEY_DIR}/${CRTFILE}" --output "$1" "$1"
+    sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "$1" "$1"
   fi
 }
 
