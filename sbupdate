@@ -59,12 +59,11 @@ function load_config() {
 function parse_args() {
   HOOK=0
 
-  for arg in "$@"; do
-    if [[ "${arg}" == "--hook" ]]; then
-      HOOK=1
-    else
-      error "unknown argument: ${arg}"
-    fi
+  while getopts "k" opt; do
+    case "${opt}" in
+      k) HOOK=1 ;;
+      ?) exit 1 ;;
+    esac
   done
 
   readonly HOOK

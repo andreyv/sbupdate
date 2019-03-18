@@ -12,5 +12,5 @@ Target = usr/share/systemd/bootctl/splash-arch.bmp
 [Action]
 Description = Updating UEFI kernel images...
 When = PostTransaction
-Exec = /usr/bin/sbupdate --hook
+Exec = /usr/bin/sbupdate -k
 NeedsTargets
