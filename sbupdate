@@ -38,6 +38,11 @@ function load_config() {
   BACKUP=1
   EXTRA_SIGN=()
   declare -g -A CMDLINE INITRD
+
+  shopt -s nullglob
+  INITRD_PREPEND=(/boot/@(intel|amd)-ucode.img)
+  shopt -u nullglob
+
   # shellcheck disable=SC1090
   source "${CONFFILE}"
 
@@ -45,7 +50,7 @@ function load_config() {
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] \
     || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
 
-  readonly KEY_DIR KEYFILE CRTFILE ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN CMDLINE_DEFAULT
+  readonly KEY_DIR KEYFILE CRTFILE ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
   readonly -A CMDLINE INITRD
 }
 
@@ -79,14 +84,6 @@ function find_efi_stub() {
       error "unsupported architecture: ${uname}"
       ;;
   esac
-}
-
-# Check if we need to prepend anything to the initramfs file
-function setup_initrd_prepend() {
-  INITRD_PREPEND=()
-  [[ -f "/boot/intel-ucode.img" ]] && INITRD_PREPEND+=('/boot/intel-ucode.img')
-  [[ -f "/boot/amd-ucode.img" ]] && INITRD_PREPEND+=('/boot/amd-ucode.img')
-  readonly -a INITRD_PREPEND
 }
 
 # Create a list of kernels to process
@@ -219,9 +216,7 @@ function main() {
   parse_args "$@"
 
   find_efi_stub
-  setup_initrd_prepend
   get_kernels
-
   create_tmpfiles
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
