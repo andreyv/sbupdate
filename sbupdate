@@ -31,7 +31,7 @@ function error() {
 
 # Load configuration
 function load_config() {
-  KEY_DIR="/root/secure-boot"
+  KEY_DIR="/etc/efi-keys"
   ESP_DIR="/boot"
   OUT_DIR="EFI/Arch"
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
