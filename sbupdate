@@ -20,7 +20,7 @@ set -eu
 
 shopt -s extglob
 
-readonly CONFFILE="/etc/default/sbupdate"
+readonly CONFFILE="/etc/sbupdate.conf"
 
 # Print an error and return unsuccessfully
 #  $1: error message

@@ -14,7 +14,7 @@ custom Secure Boot keys. See:
 After you have generated your custom keys, proceed with setup:
 * Install [sbupdate-git](https://aur.archlinux.org/packages/sbupdate-git/) from AUR
 * Place your custom keys in `/root/secure-boot`
-* Configure `/etc/default/sbupdate` (see [Configuration](#configuration))
+* Configure `/etc/sbupdate.conf` (see [Configuration](#configuration))
 * Run `sudo sbupdate` for first-time image generation
 
 For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated,
@@ -37,7 +37,7 @@ The following settings are available:
 * Locations of the key, ESP and output directories
 * Boot splash image
 
-Edit the file `/etc/default/sbupdate` to change the settings. ⚠️ **Note**: you _must_
+Edit the file `/etc/sbupdate.conf` to change the settings. ⚠️ **Note**: you _must_
 set your default kernel command line in the `CMDLINE_DEFAULT` variable.
 
 <a name="ucode"><sup>1</sup></a> Intel and AMD microcode updates are handled
@@ -63,7 +63,7 @@ format is
 
 You also need to sign your boot manager's own UEFI executables with your
 custom keys. Add corresponding filenames to the `EXTRA_SIGN` array in
-`/etc/default/sbupdate`, for example (systemd-boot):
+`/etc/sbupdate.conf`, for example (systemd-boot):
 
     EXTRA_SIGN=('/boot/EFI/BOOT/BOOTX64.EFI' '/boot/EFI/systemd/systemd-bootx64.efi')
 
