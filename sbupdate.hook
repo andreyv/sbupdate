@@ -4,13 +4,26 @@ Operation = Upgrade
 Operation = Remove
 Type = File
 Target = boot/vmlinuz-*
-Target = boot/*-ucode.img
 Target = usr/lib/initcpio/*
-Target = usr/lib/systemd/boot/efi/linux*.efi.stub
-Target = usr/share/systemd/bootctl/splash-arch.bmp
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = intel-ucode
+Target = amd-ucode
+
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = systemd
 
 [Action]
 Description = Updating UEFI kernel images...
 When = PostTransaction
 Exec = /usr/bin/sbupdate -k
+Depends = systemd
+Depends = binutils
+Depends = sbsigntools
 NeedsTargets
