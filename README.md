@@ -13,8 +13,7 @@ custom Secure Boot keys. See:
 
 After you have generated your custom keys, proceed with setup:
 * Install [sbupdate-git](https://aur.archlinux.org/packages/sbupdate-git/) from AUR
-* Place your custom keys in `/etc/efi-keys`. Make sure the directory is
-  accessible only by the superuser.
+* Place your custom keys in `/etc/efi-keys`
 * Configure `/etc/sbupdate.conf` (see [Configuration](#configuration))
 * Run `sudo sbupdate` for first-time image generation
 
