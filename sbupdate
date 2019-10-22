@@ -37,7 +37,7 @@ function load_config() {
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   BACKUP=1
   EXTRA_SIGN=()
-  declare -g -A CMDLINE INITRD
+  declare -g -A CMDLINE INITRD KERNEL
 
   shopt -s nullglob
   INITRD_PREPEND=(/boot/@(intel|amd)-ucode.img)
@@ -51,7 +51,7 @@ function load_config() {
     || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
-  readonly -A CMDLINE INITRD
+  readonly -A CMDLINE INITRD KERNEL
 }
 
 # Parse script arguments
@@ -87,22 +87,44 @@ function find_efi_stub() {
 
 # Create a list of kernels to process
 function get_kernels() {
-  local all_kernels=(/usr/lib/modules/*); all_kernels=("${all_kernels[@]#/usr/lib/modules/}")
-  local force_all=0
+  local all_kernels=(${!KERNEL[@]} ${!CMDLINE[@]} ${!INITRD[@]});
+  local kernel_lookup
+  declare -A kernel_lookup
+  for kernel in "${all_kernels[@]}"; do
+    kernel_lookup[$kernel]="${KERNEL[$kernel]:-$kernel}"
+  done
+  all_kernels=("${!kernel_lookup[@]}")
+
   declare -g -a KERNELS OLD_KERNELS
+  local force_all=0
 
   if (( HOOK )); then
     # The script was run from the hook. Read standard input to determine
     # which kernels we need to update.
     while read -r target; do
       if [[ "${target}" =~ ^usr/lib/modules/(.+)/vmlinuz$ ]]; then
+        local changed_image="${BASH_REMATCH[1]}"
+        local kernels= # trialing = is necessary to have it bound after unset
+        declare -A kernels
+        for kernel in "${!kernel_lookup[@]}"; do
+          local image="${kernel_lookup[$kernel]}"
+          if [[ "$changed_image" == "$image" ]]; then
+            kernels[$kernel]=1
+          fi
+        done
+        echo "for $changed_image found: ${!kernels[@]}"
         # Regular kernel
-        if [[ ! -f "/${target}" ]]; then
-          # We are removing this kernel
-          OLD_KERNELS+=("${BASH_REMATCH[1]}")
-        else
-          KERNELS+=("${BASH_REMATCH[1]}")
+        if [[ ${#kernels[@]} > 0 ]]; then
+          if [[ ! -f "/${target}" ]]; then
+            #echo "removed /$target"
+            # We are removing this kernel
+            OLD_KERNELS+=("${!kernels[@]}")
+          else
+            #echo "changed /$target"
+            KERNELS+=("${!kernels[@]}")
+          fi
         fi
+        unset kernels
       else
         # Another dependency; update all kernels
         force_all=1
@@ -119,42 +141,28 @@ function get_kernels() {
   readonly -a KERNELS OLD_KERNELS
 }
 
-# Return the mkinitcpio name corresponding to a kernel
-#   $1: kernel name
-function mkinitcpio_name() {
-  [[ $1 =~ (-[[:lower:]]+)?$ ]]
-  echo "linux${BASH_REMATCH[1]}"
-}
-
 # Return output file path corresponding to a kernel/initrd pair
 #   $1: kernel name
-#   $2: initrd file name
 function output_name() {
-  name="$(mkinitcpio_name "$1")"
-  if [[ "$2" =~ /boot/initramfs-${name}([[:lower:]-]*).img ]]; then
-    echo "${ESP_DIR}/${OUT_DIR}/${name}${BASH_REMATCH[1]}-signed.efi"
-  else
-    error "invalid initramfs '$2' for kernel $1"
-  fi
+  echo "${ESP_DIR}/${OUT_DIR}/$1-signed.efi"
 }
 
 # Remove a signed kernel image
 #   $1: kernel name
-#   $2: initrd file name
 function remove_image() {
-  local output; output="$(output_name "$1" "$2")"
+  local output="$(output_name "$1")"
   echo "Removing $(basename "${output}")"
   rm -f "${output}" "${output}.bak"
 }
 
 # Generate a signed kernel image
 #   $1: kernel name
-#   $2: initrd file name
 function update_image() {
-  local linux="/usr/lib/modules/$1/vmlinuz"
-  local name; name="$(mkinitcpio_name "$1")"
-  local cmdline="${CMDLINE[${name}]:-${CMDLINE_DEFAULT}}"
-  local output; output="$(output_name "$1" "$2")"
+  local linux_name="${KERNEL[$1]:-$1}"
+  local linux="/usr/lib/modules/${linux_name}/vmlinuz"
+  local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
+  local output="$(output_name "$1")"
+  local initrd="${INITRD[$1]:-/boot/initramfs-${linux_name}.img}"
 
   echo "Generating and signing $(basename "${output}")"
 
@@ -162,7 +170,7 @@ function update_image() {
   if (( BACKUP )) && [[ -f "${output}" ]]; then
     mv "${output}" "${output}.bak"
   fi
-  
+
   # Create a combined binary with systemd EFI stub. For additional information see:
   #   https://github.com/systemd/systemd/blob/master/src/boot/efi/stub.c
   #   https://github.com/systemd/systemd/blob/master/test/test-efi-create-disk.sh
@@ -171,27 +179,23 @@ function update_image() {
   #   https://www.kernel.org/doc/Documentation/early-userspace/buffer-format.txt
   #   https://www.kernel.org/doc/Documentation/x86/early-microcode.txt
   objcopy \
-    --add-section .osrel="/etc/os-release"                   --change-section-vma .osrel=0x20000    \
-    --add-section .cmdline=<(echo -n "${cmdline}")           --change-section-vma .cmdline=0x30000  \
-    --add-section .splash="${SPLASH}"                        --change-section-vma .splash=0x40000   \
-    --add-section .linux="${linux}"                          --change-section-vma .linux=0x2000000  \
-    --add-section .initrd=<(cat "${INITRD_PREPEND[@]}" "$2") --change-section-vma .initrd=0x3000000 \
+    --add-section .osrel="/etc/os-release"                        --change-section-vma .osrel=0x20000    \
+    --add-section .cmdline=<(echo -n "${cmdline}")                --change-section-vma .cmdline=0x30000  \
+    --add-section .splash="${SPLASH}"                             --change-section-vma .splash=0x40000   \
+    --add-section .linux="${linux}"                               --change-section-vma .linux=0x2000000  \
+    --add-section .initrd=<(cat "${INITRD_PREPEND[@]}" "$initrd") --change-section-vma .initrd=0x3000000 \
     "${EFISTUB}" "${output}"
   wait $!
 
   # Sign the resulting output file
-  sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "${output}" "${output}"
+  sign_file "${output}" "${output}"
 }
 
 # Process changes for a kernel
 #   $1: operation (remove_image or update_image)
 #   $2: kernel name
 function process_kernel() {
-  local name; name="$(mkinitcpio_name "$2")"
-  local initrds="${INITRD[${name}]:-/boot/initramfs-${name}.img}"
-  for initrd in ${initrds}; do # Note: unquoted expansion
-    "$1" "$2" "${initrd}"
-  done
+  "$1" "$2"
 }
 
 # Check and sign a user-specified extra file
@@ -204,8 +208,15 @@ function check_sign_extra_file() {
     echo "warning: failed to verify $1" >&2
   else
     echo "Signing $1"
-    sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "$1" "$1"
+    sign_file "$1" "$1"
   fi
+}
+
+# Sign a file
+#   $1: source file
+#   $2: target file
+function sign_file() {
+  sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "$2" "$1"
 }
 
 # Entry point
