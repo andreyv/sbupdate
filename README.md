@@ -17,7 +17,7 @@ After you have generated your custom keys, proceed with setup:
 * Configure `/etc/sbupdate.conf` (see [Configuration](#configuration))
 * Run `sudo sbupdate` for first-time image generation
 
-For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated,
+For each kernel variant given in `KERNEL_VARIANTS` a signed UEFI image will be generated,
 by default in `/boot/EFI/Arch/<NAME>-signed.efi`. Additional images can be
 generated if multiple initramfs are configured. Now you can
 [add these images](#direct-booting-vs-boot-manager) to your UEFI firmware or
@@ -32,7 +32,7 @@ the signed UEFI image.
 ## Configuration
 
 The following settings are available:
-* Command line and multiple initramfs[<sup>1</sup>](#ucode) for each specified kernel
+* Command line and initramfs[<sup>1</sup>](#ucode) for each variant
 * A list of additional boot files to sign
 * Locations of the key, ESP and output directories
 * Boot splash image

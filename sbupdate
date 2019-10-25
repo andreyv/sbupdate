@@ -37,7 +37,10 @@ function load_config() {
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   BACKUP=1
   EXTRA_SIGN=()
+  CMDLINE_DEFAULT=
+  KERNEL_VARIANTS=
   declare -g -A CMDLINE INITRD KERNEL
+  declare -g -a KERNEL_VARIANTS
 
   shopt -s nullglob
   INITRD_PREPEND=(/boot/@(intel|amd)-ucode.img)
@@ -47,11 +50,13 @@ function load_config() {
   source "${CONFFILE}"
 
   [[ -d "${ESP_DIR}" ]] || error "${ESP_DIR} does not exist"
-  [[ -n "${CMDLINE_DEFAULT:+x}" ]] \
-    || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
+  [[ ${#KERNEL_VARIANTS} > 0 ]] \
+    || error "KERNEL_VARIANTS is not defined or empty in ${CONFFILE}"
+
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
   readonly -A CMDLINE INITRD KERNEL
+  readonly -a KERNEL_VARIANTS
 }
 
 # Parse script arguments
@@ -85,15 +90,23 @@ function find_efi_stub() {
   esac
 }
 
+# Looks up the vmlinuz path of a given kernel package name
+#  $1: kernel package
+function lookup_kernel_bin() {
+  if test -f "$1"; then
+    echo "$1"
+  else
+    echo "$(pacman -Qlq "$1" | grep '/vmlinuz$')"
+  fi
+}
+
 # Create a list of kernels to process
 function get_kernels() {
-  local all_kernels=(${!KERNEL[@]} ${!CMDLINE[@]} ${!INITRD[@]});
   local kernel_lookup
   declare -A kernel_lookup
-  for kernel in "${all_kernels[@]}"; do
-    kernel_lookup[$kernel]="${KERNEL[$kernel]:-$kernel}"
+  for kernel in "${KERNEL_VARIANTS[@]}"; do
+    kernel_lookup[$kernel]="$(lookup_kernel_bin "${KERNEL[$kernel]:-$kernel}")"
   done
-  all_kernels=("${!kernel_lookup[@]}")
 
   declare -g -a KERNELS OLD_KERNELS
   local force_all=0
@@ -108,7 +121,7 @@ function get_kernels() {
         declare -A kernels
         for kernel in "${!kernel_lookup[@]}"; do
           local image="${kernel_lookup[$kernel]}"
-          if [[ "$changed_image" == "$image" ]]; then
+          if [[ "/${changed_image}" == "${image}" ]]; then
             kernels[$kernel]=1
           fi
         done
@@ -116,11 +129,9 @@ function get_kernels() {
         # Regular kernel
         if [[ ${#kernels[@]} > 0 ]]; then
           if [[ ! -f "/${target}" ]]; then
-            #echo "removed /$target"
             # We are removing this kernel
             OLD_KERNELS+=("${!kernels[@]}")
           else
-            #echo "changed /$target"
             KERNELS+=("${!kernels[@]}")
           fi
         fi
@@ -136,7 +147,7 @@ function get_kernels() {
   fi
 
   if (( force_all )); then
-    KERNELS=("${all_kernels[@]}")
+    KERNELS=("${!kernel_lookup[@]}")
   fi
   readonly -a KERNELS OLD_KERNELS
 }
@@ -156,13 +167,18 @@ function remove_image() {
 }
 
 # Generate a signed kernel image
-#   $1: kernel name
+#   $1: variant name
 function update_image() {
   local linux_name="${KERNEL[$1]:-$1}"
-  local linux="/usr/lib/modules/${linux_name}/vmlinuz"
+  local linux="$(lookup_kernel_bin "${linux_name}")"
   local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
   local output="$(output_name "$1")"
   local initrd="${INITRD[$1]:-/boot/initramfs-${linux_name}.img}"
+
+  [[ -r "$linux" ]] || error "variant $1: Kernel image ${linux} does not exist!"
+  [[ -r "$initrd" ]] || error "variant $1: initrd ${initrd} does not exist!"
+  grep -qP '\S' <<< "$cmdline" || error "variant $1: no kernel commandline given!"
+
 
   echo "Generating and signing $(basename "${output}")"
 
