@@ -37,7 +37,7 @@ function load_config() {
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   BACKUP=1
   EXTRA_SIGN=()
-  declare -g -A CMDLINE INITRD
+  declare -g -A CONFIGS CMDLINE INITRD
 
   shopt -s nullglob
   INITRD_PREPEND=(/boot/@(intel|amd)-ucode.img)
@@ -51,22 +51,24 @@ function load_config() {
     || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
-  readonly -A CMDLINE INITRD
+  readonly -A CONFIGS CMDLINE INITRD
 }
 
 # Parse script arguments
 #  $@: arguments
 function parse_args() {
   HOOK=0
+  REMOVE=0
 
-  while getopts "k" opt; do
+  while getopts "kr" opt; do
     case "${opt}" in
       k) HOOK=1 ;;
+      r) REMOVE=1 ;;
       ?) exit 1 ;;
     esac
   done
 
-  readonly HOOK
+  readonly HOOK REMOVE
 }
 
 # Find the location of the systemd EFI stub
@@ -87,22 +89,17 @@ function find_efi_stub() {
 
 # Create a list of kernels to process
 function get_kernels() {
-  local all_kernels=(/boot/vmlinuz-*); all_kernels=("${all_kernels[@]#/boot/vmlinuz-}")
+  local all_kernels=(/usr/lib/modules/*); all_kernels=("${all_kernels[@]#/usr/lib/modules/}")
   local force_all=0
-  declare -g -a KERNELS OLD_KERNELS
+  declare -g -a KERNELS
 
   if (( HOOK )); then
     # The script was run from the hook. Read standard input to determine
     # which kernels we need to update.
     while read -r target; do
-      if [[ "${target}" =~ ^boot/vmlinuz-(.+)$ ]]; then
+      if [[ "${target}" =~ ^usr/lib/modules/(.+)/vmlinuz$ ]]; then
         # Regular kernel
-        if [[ ! -f "/${target}" ]]; then
-          # We are removing this kernel
-          OLD_KERNELS+=("${BASH_REMATCH[1]}")
-        else
-          KERNELS+=("${BASH_REMATCH[1]}")
-        fi
+        KERNELS+=("${BASH_REMATCH[1]}")
       else
         # Another dependency; update all kernels
         force_all=1
@@ -114,38 +111,33 @@ function get_kernels() {
   fi
 
   if (( force_all )); then
+    (( ! REMOVE )) || error "trying to remove all kernels"
     KERNELS=("${all_kernels[@]}")
   fi
-  readonly -a KERNELS OLD_KERNELS
+  readonly -a KERNELS
 }
 
-# Return output file path corresponding to a kernel/initrd pair
-#   $1: kernel name
-#   $2: initrd file name
+# Return output file path corresponding to an image
+#   $1: image name
 function output_name() {
-  if [[ "$2" =~ /boot/initramfs-$1([a-z-]*).img ]]; then
-    echo "${ESP_DIR}/${OUT_DIR}/$1${BASH_REMATCH[1]}-signed.efi"
-  else
-    error "invalid initramfs '$2' for kernel $1"
-  fi
+  echo "${ESP_DIR}/${OUT_DIR}/$1-signed.efi"
 }
 
 # Remove a signed kernel image
-#   $1: kernel name
-#   $2: initrd file name
+#   $1: image name
 function remove_image() {
-  local output; output="$(output_name "$1" "$2")"
+  local output; output="$(output_name "$1")"
   echo "Removing $(basename "${output}")"
   rm -f "${output}" "${output}.bak"
 }
 
 # Generate a signed kernel image
-#   $1: kernel name
-#   $2: initrd file name
+#   $1: image name
+#   $2: kernel location
 function update_image() {
-  local linux="/boot/vmlinuz-$1"
+  local initrd="${INITRD[$1]:-/boot/initramfs-$1.img}"
   local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
-  local output; output="$(output_name "$1" "$2")"
+  local output; output="$(output_name "$1")"
 
   echo "Generating and signing $(basename "${output}")"
 
@@ -162,11 +154,11 @@ function update_image() {
   #   https://www.kernel.org/doc/Documentation/early-userspace/buffer-format.txt
   #   https://www.kernel.org/doc/Documentation/x86/early-microcode.txt
   objcopy \
-    --add-section .osrel="/etc/os-release"                   --change-section-vma .osrel=0x20000    \
-    --add-section .cmdline=<(echo -n "${cmdline}")           --change-section-vma .cmdline=0x30000  \
-    --add-section .splash="${SPLASH}"                        --change-section-vma .splash=0x40000   \
-    --add-section .linux="${linux}"                          --change-section-vma .linux=0x2000000  \
-    --add-section .initrd=<(cat "${INITRD_PREPEND[@]}" "$2") --change-section-vma .initrd=0x3000000 \
+    --add-section .osrel="/etc/os-release"                          --change-section-vma .osrel=0x20000    \
+    --add-section .cmdline=<(echo -n "${cmdline}")                  --change-section-vma .cmdline=0x30000  \
+    --add-section .splash="${SPLASH}"                               --change-section-vma .splash=0x40000   \
+    --add-section .linux="$2"                                       --change-section-vma .linux=0x2000000  \
+    --add-section .initrd=<(cat "${INITRD_PREPEND[@]}" "${initrd}") --change-section-vma .initrd=0x3000000 \
     "${EFISTUB}" "${output}"
   wait $!
 
@@ -174,13 +166,17 @@ function update_image() {
   sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "${output}" "${output}"
 }
 
-# Process changes for a kernel
-#   $1: operation (remove_image or update_image)
-#   $2: kernel name
-function process_kernel() {
-  local initrds="${INITRD[$2]:-/boot/initramfs-$2.img}"
-  for initrd in ${initrds}; do # Note: unquoted expansion
-    "$1" "$2" "${initrd}"
+# Map kernel versions to image names and process changes
+function process_kernels() {
+  for k in "${KERNELS[@]}"; do
+    local name; name="$(<"/usr/lib/modules/$k/pkgbase")"
+    for cfg in ${CONFIGS[${name}]:-${name}}; do # Note: unquoted expansion
+      if (( REMOVE )); then
+        remove_image "${cfg}"
+      else
+        update_image "${cfg}" "/usr/lib/modules/$k/vmlinuz"
+      fi
+    done
   done
 }
 
@@ -207,12 +203,7 @@ function main() {
   get_kernels
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
-  for k in "${OLD_KERNELS[@]}"; do
-    process_kernel remove_image "$k"
-  done
-  for k in "${KERNELS[@]}"; do
-    process_kernel update_image "$k"
-  done
+  process_kernels
 
   for f in "${EXTRA_SIGN[@]}"; do
     check_sign_extra_file "$f"

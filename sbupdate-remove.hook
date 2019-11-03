@@ -1,0 +1,13 @@
+[Trigger]
+Operation = Remove
+Type = File
+Target = usr/lib/modules/*/vmlinuz
+
+[Action]
+Description = Removing UEFI kernel images...
+When = PreTransaction
+Exec = /usr/bin/sbupdate -k -r
+Depends = systemd
+Depends = binutils
+Depends = sbsigntools
+NeedsTargets

@@ -1,9 +1,14 @@
 [Trigger]
 Operation = Install
 Operation = Upgrade
+Type = File
+Target = usr/lib/modules/*/vmlinuz
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
 Operation = Remove
 Type = File
-Target = boot/vmlinuz-*
 Target = usr/lib/initcpio/*
 
 [Trigger]
