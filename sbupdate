@@ -87,7 +87,7 @@ function find_efi_stub() {
 
 # Create a list of kernels to process
 function get_kernels() {
-  local all_kernels=(/usr/lib/modules/*); all_kernels=("${all_kernels[@]#/usr/lib/modules/}")
+  local all_kernels=(/boot/vmlinuz-*); all_kernels=("${all_kernels[@]#/boot/vmlinuz-}")
   local force_all=0
   declare -g -a KERNELS OLD_KERNELS
 
@@ -95,7 +95,7 @@ function get_kernels() {
     # The script was run from the hook. Read standard input to determine
     # which kernels we need to update.
     while read -r target; do
-      if [[ "${target}" =~ ^usr/lib/modules/(.+)/vmlinuz$ ]]; then
+      if [[ "${target}" =~ ^boot/vmlinuz-(.+)$ ]]; then
         # Regular kernel
         if [[ ! -f "/${target}" ]]; then
           # We are removing this kernel
@@ -119,20 +119,12 @@ function get_kernels() {
   readonly -a KERNELS OLD_KERNELS
 }
 
-# Return the mkinitcpio name corresponding to a kernel
-#   $1: kernel name
-function mkinitcpio_name() {
-  [[ $1 =~ (-[[:lower:]]+)?$ ]]
-  echo "linux${BASH_REMATCH[1]}"
-}
-
 # Return output file path corresponding to a kernel/initrd pair
 #   $1: kernel name
 #   $2: initrd file name
 function output_name() {
-  name="$(mkinitcpio_name "$1")"
-  if [[ "$2" =~ /boot/initramfs-${name}([[:lower:]-]*).img ]]; then
-    echo "${ESP_DIR}/${OUT_DIR}/${name}${BASH_REMATCH[1]}-signed.efi"
+  if [[ "$2" =~ /boot/initramfs-$1([a-z-]*).img ]]; then
+    echo "${ESP_DIR}/${OUT_DIR}/$1${BASH_REMATCH[1]}-signed.efi"
   else
     error "invalid initramfs '$2' for kernel $1"
   fi
@@ -151,9 +143,8 @@ function remove_image() {
 #   $1: kernel name
 #   $2: initrd file name
 function update_image() {
-  local linux="/usr/lib/modules/$1/vmlinuz"
-  local name; name="$(mkinitcpio_name "$1")"
-  local cmdline="${CMDLINE[${name}]:-${CMDLINE_DEFAULT}}"
+  local linux="/boot/vmlinuz-$1"
+  local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
   local output; output="$(output_name "$1" "$2")"
 
   echo "Generating and signing $(basename "${output}")"
@@ -187,8 +178,7 @@ function update_image() {
 #   $1: operation (remove_image or update_image)
 #   $2: kernel name
 function process_kernel() {
-  local name; name="$(mkinitcpio_name "$2")"
-  local initrds="${INITRD[${name}]:-/boot/initramfs-${name}.img}"
+  local initrds="${INITRD[$2]:-/boot/initramfs-$2.img}"
   for initrd in ${initrds}; do # Note: unquoted expansion
     "$1" "$2" "${initrd}"
   done
