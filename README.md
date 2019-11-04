@@ -34,14 +34,17 @@ Edit the file `/etc/sbupdate.conf`. Set your default kernel command line
 in the `CMDLINE_DEFAULT` variable.
 
 The following optional settings are available:
-* Command line and initramfs[<sup>1</sup>](#ucode) for each kernel config
+* Command line and initramfs[<sup>†</sup>](#ucode) for each kernel config
   (each kernel can have multiple configs)
 * A list of additional boot files to sign
 * Locations of the key, ESP and output directories
 * Boot splash image
 
-<a name="ucode"><sup>1</sup></a> Intel and AMD microcode updates are handled
+<a name="ucode">💡 _Hint_:</a> Intel and AMD microcode updates are handled
 automatically.
+
+💡 _Hint_: Disable boot splash to keep the UEFI boot logo.
+
 
 ## Direct booting vs. boot manager
 
