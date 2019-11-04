@@ -6,8 +6,8 @@ jobs:
     steps:
       - run:
           name: Update and install dependencies
-          command: pacman -Syu --noconfirm --noprogressbar git openssh shellcheck
+          command: pacman -Syu --noconfirm --noprogressbar git openssh make shellcheck
       - checkout
       - run:
-          name: Analyze shell scripts
-          command: shellcheck sbupdate
+          name: Check
+          command: make check
