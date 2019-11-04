@@ -17,11 +17,10 @@ After you have generated your custom keys, proceed with setup:
 * Configure `/etc/sbupdate.conf` (see [Configuration](#configuration))
 * Run `sudo sbupdate` for first-time image generation
 
-For each kernel `/boot/vmlinuz-<NAME>` a signed UEFI image will be generated,
-by default in `/boot/EFI/Arch/<NAME>-signed.efi`. Additional images can be
-generated if multiple initramfs are configured. Now you can
-[add these images](#direct-booting-vs-boot-manager) to your UEFI firmware or
-boot manager configuration.
+For each installed Arch kernel, a signed UEFI image will be generated, by default
+in `/boot/EFI/Arch/<NAME>-signed.efi`. Multiple images can be generated with
+advanced configuration. Now you can [add these images](#direct-booting-vs-boot-manager)
+to your UEFI firmware or boot manager configuration.
 
 After the initial setup, signed images will be (re)generated automatically when
 you install or update kernels using Pacman.
@@ -31,14 +30,15 @@ the signed UEFI image.
 
 ## Configuration
 
-The following settings are available:
-* Command line and multiple initramfs[<sup>1</sup>](#ucode) for each specified kernel
+Edit the file `/etc/sbupdate.conf`. Set your default kernel command line
+in the `CMDLINE_DEFAULT` variable.
+
+The following optional settings are available:
+* Command line and initramfs[<sup>1</sup>](#ucode) for each kernel config
+  (each kernel can have multiple configs)
 * A list of additional boot files to sign
 * Locations of the key, ESP and output directories
 * Boot splash image
-
-Edit the file `/etc/sbupdate.conf` to change the settings. ⚠️ **Note**: you _must_
-set your default kernel command line in the `CMDLINE_DEFAULT` variable.
 
 <a name="ucode"><sup>1</sup></a> Intel and AMD microcode updates are handled
 automatically.
@@ -53,6 +53,8 @@ Booting directly from firmware is arguably more secure, but may also be harder
 to set up and use. See [Using UEFI directly](https://wiki.archlinux.org/index.php/EFISTUB#Using_UEFI_directly)
 in the above article, with the exception that the kernel command line does not
 need to be specified in this case.
+
+---
 
 Alternatively, you can use a boot manager. In this case you need to add the generated UEFI
 images to the boot manager configuration. For systemd-boot, the basic entry
@@ -70,7 +72,7 @@ custom keys. Add corresponding filenames to the `EXTRA_SIGN` array in
 and re-run the tool if needed. You should remember to run the tool every time
 you update your boot manager's files (e. g., after `sudo bootctl update`).
 
-⚠️ **Note**: when booting with Secure Boot disabled, options passed from an EFI shell
+⚠️ **Note**: When booting with Secure Boot disabled, options passed from an EFI shell
 (_even empty_) may override the built-in command line in the combined image, and
 the boot may fail. See [#4](https://github.com/andreyv/sbupdate/issues/4).
 
@@ -79,9 +81,9 @@ the boot may fail. See [#4](https://github.com/andreyv/sbupdate/issues/4).
 
 Typically ESP is mounted on `/boot` and contains also the original, unsigned
 files such as the Linux kernel image and initramfs. You may choose to mount ESP
-on a different directory (for example, [`/efi`](https://www.freedesktop.org/software/systemd/man/bootctl.html#--esp-path=)) and keep `/boot` itself on
-the secure root file system. This way ESP will only contain signed images which
-cannot be tampered with.
+on a different directory (for example, [`/efi`](https://www.freedesktop.org/software/systemd/man/bootctl.html#--esp-path=))
+and keep `/boot` itself on the secure root file system. This way ESP will only
+contain signed images which cannot be tampered with.
 
 See [Configuration](#configuration) to change the ESP directory.
 
