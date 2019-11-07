@@ -183,7 +183,7 @@ function process_kernels() {
 # Check and sign a user-specified extra file
 #   $1: file path
 function check_sign_extra_file() {
-  if sbverify --cert "${KEY_DIR}"/@(DB|db).crt "$1" >/dev/null 2>&1; then
+  if sbverify --cert "${KEY_DIR}"/@(DB|db).crt "$1" >/dev/null; then
     echo "Skipping already signed file $1"
   elif (( HOOK )); then
     # Signing extra files from the hook is prohibited for security reasons
