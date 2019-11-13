@@ -160,7 +160,6 @@ function update_image() {
     --add-section .linux="$2"                                       --change-section-vma .linux=0x2000000  \
     --add-section .initrd=<(cat "${INITRD_PREPEND[@]}" "${initrd}") --change-section-vma .initrd=0x3000000 \
     "${EFISTUB}" "${output}"
-  wait $!
 
   # Sign the resulting output file
   sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "${output}" "${output}"
