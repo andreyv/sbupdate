@@ -128,7 +128,11 @@ function output_name() {
 function remove_image() {
   local output; output="$(output_name "$1")"
   echo "Removing $(basename "${output}")"
-  rm -f "${output}" "${output}.bak"
+  if (( BACKUP )); then
+    mv -f "${output}" "${output}.bak"
+  else
+    rm "${output}"
+  fi
 }
 
 # Generate a signed kernel image
@@ -141,11 +145,6 @@ function update_image() {
 
   echo "Generating and signing $(basename "${output}")"
 
-  # Back up existing file if present
-  if (( BACKUP )) && [[ -f "${output}" ]]; then
-    mv "${output}" "${output}.bak"
-  fi
-  
   # Create a combined binary with systemd EFI stub. For additional information see:
   #   https://github.com/systemd/systemd/blob/master/src/boot/efi/stub.c
   #   https://github.com/systemd/systemd/blob/master/test/test-efi-create-disk.sh
