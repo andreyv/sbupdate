@@ -167,9 +167,10 @@ function update_image() {
 
 # Map kernel versions to image names and process changes
 function process_kernels() {
+  local kdir name
   for k in "${KERNELS[@]}"; do
-    local kdir; kdir="$(dirname "$k")"
-    local name; name="$(<"${kdir}/pkgbase")"
+    kdir="$(dirname "$k")"
+    name="$(<"${kdir}/pkgbase")"
     [[ -f "${kdir}/kernelbase" ]] && name="$(<"${kdir}/kernelbase")"
     for cfg in ${CONFIGS[${name}]:-${name}}; do # Note: unquoted expansion
       if (( REMOVE )); then
