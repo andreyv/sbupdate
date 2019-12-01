@@ -89,7 +89,7 @@ function find_efi_stub() {
 
 # Create a list of kernels to process
 function get_kernels() {
-  local all_kernels=(/usr/lib/modules/*); all_kernels=("${all_kernels[@]#/usr/lib/modules/}")
+  local all_kernels=(/usr/lib/modules/*/vmlinuz)
   local force_all=0
   declare -g -a KERNELS
 
@@ -97,9 +97,9 @@ function get_kernels() {
     # The script was run from the hook. Read standard input to determine
     # which kernels we need to update.
     while read -r target; do
-      if [[ "${target}" =~ ^usr/lib/modules/(.+)/vmlinuz$ ]]; then
+      if [[ "${target}" =~ ^usr/lib/modules/.+/vmlinuz$ ]]; then
         # Regular kernel
-        KERNELS+=("${BASH_REMATCH[1]}")
+        KERNELS+=("/${target}")
       else
         # Another dependency; update all kernels
         force_all=1
@@ -168,13 +168,14 @@ function update_image() {
 # Map kernel versions to image names and process changes
 function process_kernels() {
   for k in "${KERNELS[@]}"; do
-    local name; name="$(<"/usr/lib/modules/$k/pkgbase")"
-    [[ -f "/usr/lib/modules/$k/kernelbase" ]] && name="$(<"/usr/lib/modules/$k/kernelbase")"
+    local kdir; kdir="$(dirname "$k")"
+    local name; name="$(<"${kdir}/pkgbase")"
+    [[ -f "${kdir}/kernelbase" ]] && name="$(<"${kdir}/kernelbase")"
     for cfg in ${CONFIGS[${name}]:-${name}}; do # Note: unquoted expansion
       if (( REMOVE )); then
         remove_image "${cfg}"
       else
-        update_image "${cfg}" "/usr/lib/modules/$k/vmlinuz"
+        update_image "${cfg}" "$k"
       fi
     done
   done
