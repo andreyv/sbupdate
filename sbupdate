@@ -169,6 +169,7 @@ function update_image() {
 function process_kernels() {
   for k in "${KERNELS[@]}"; do
     local name; name="$(<"/usr/lib/modules/$k/pkgbase")"
+    [[ -f "/usr/lib/modules/$k/kernelbase" ]] && name="$(<"/usr/lib/modules/$k/kernelbase")"
     for cfg in ${CONFIGS[${name}]:-${name}}; do # Note: unquoted expansion
       if (( REMOVE )); then
         remove_image "${cfg}"
