@@ -1,6 +1,6 @@
 # sbupdate
 
-[![CircleCI](https://circleci.com/gh/andreyv/sbupdate.svg?style=shield)](https://circleci.com/gh/andreyv/sbupdate)
+![](https://github.com/andreyv/sbupdate/workflows/CI/badge.svg)
 
 This tool allows you to sign Arch Linux kernels using your own Secure Boot keys.
 
