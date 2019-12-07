@@ -89,7 +89,6 @@ function find_efi_stub() {
 
 # Create a list of kernels to process
 function get_kernels() {
-  local all_kernels=(/usr/lib/modules/*/vmlinuz)
   local force_all=0
   declare -g -a KERNELS
 
@@ -112,7 +111,7 @@ function get_kernels() {
 
   if (( force_all )); then
     (( ! REMOVE )) || error "trying to remove all kernels"
-    KERNELS=("${all_kernels[@]}")
+    KERNELS=(/usr/lib/modules/*/vmlinuz)
   fi
   readonly -a KERNELS
 }
