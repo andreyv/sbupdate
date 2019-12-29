@@ -97,7 +97,7 @@ recommended for increased security.
 
 ## `fwupd` Compatibility
 
-`sbupdate` is now compatible with [`fwupd`](https://github.com/fwupd/fwupd), the Linux firmware update daemon. `fwupd' 
+`sbupdate` is now compatible with [`fwupd`](https://github.com/fwupd/fwupd), the Linux firmware update daemon. `fwupd`
 requires that the file, `/usr/lib/fwupd/efi/fwupdx64.efi.signed` be present *and* signed; 
 hence, `sbupdate` uses the keys and certificates found in `KEY_DIR` as defined in `/etc/sbupdate.conf` to sign the file 
 `/usr/lib/fwupd/fwupdx64.efi` (already provided by fwupd), and create `fwupdx64.efi.signed` in the same directory, using `sbsign`'s 
