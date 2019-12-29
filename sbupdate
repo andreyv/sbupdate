@@ -134,6 +134,30 @@ function remove_image() {
   fi
 }
 
+# Check for presence of fwupd package AND if fwupd module is enabled.
+#   If so, sign the fwupd image, /usr/lib/fwupd/efi/fwupdx64.efi as fwupdx64.efi.signed.
+#   Use sbsign default behaviour for this, as demanded by fwupd.
+#
+#   This function is necessary because the naming convention of
+#   fwupd has ".signed" at the end of the image file.
+function sign_fwupd() {
+  local img_name="fwupdx64.efi"
+  local fwupd_dir="/usr/lib/fwupd/efi"
+  if (( pacman -Qi fwupd > /dev/null ) && ( systemctl is-active --quiet fwupd )); then
+    echo "fwupd package is installed, and service is running."
+    if sbverify --cert "${KEY_DIR}"/@(DB|db).crt "${fwupd_dir}/${img_name}".signed > /dev/null; then
+      echo "Skipping already signed file ${fwupd_dir}/${img_name}."
+    else
+      # Sign the fwupd image file.
+      echo "Signing ${fwupd_dir}/${img_name}."
+      sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt "${fwupd_dir}/${img_name}"
+      # Restart the fwupd service.
+      echo "Restarting fwupd.service."
+      systemctl restart fwupd.service --quiet > /dev/null
+    fi
+  fi
+}
+
 # Generate a signed kernel image
 #   $1: image name
 #   $2: kernel location
@@ -209,6 +233,8 @@ function main() {
   for f in "${EXTRA_SIGN[@]}"; do
     check_sign_extra_file "$f"
   done
+
+  sign_fwupd
 }
 
 main "$@"
