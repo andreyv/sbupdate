@@ -21,6 +21,7 @@ set -eu
 shopt -s extglob
 
 readonly CONFFILE="/etc/sbupdate.conf"
+readonly EFIVARFS_DBX="/sys/firmware/efi/efivars/dbx-d719b2cb-3d3a-4596-a3bc-dad00e67656f"
 
 # Print an error and return unsuccessfully
 #  $1: error message
@@ -37,6 +38,7 @@ function load_config() {
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   BACKUP=1
   EXTRA_SIGN=()
+  REVOKE=0
   declare -g -A CONFIGS CMDLINE INITRD
 
   shopt -s nullglob
@@ -50,7 +52,7 @@ function load_config() {
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] \
     || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
 
-  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
+  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN REVOKE INITRD_PREPEND CMDLINE_DEFAULT
   readonly -A CONFIGS CMDLINE INITRD
 }
 
@@ -126,11 +128,31 @@ function output_name() {
 #   $1: image name
 function remove_image() {
   local output; output="$(output_name "$1")"
+  local sum; sum="$(sha256sum "${output}" | cut -f 1 -d' ')"
+
+  make_revocation_list "$1"
+  # Mark this image as the current backup
+  printf "$sum" > "${KEY_DIR}/backup_image-${1}.sha256"
+
   echo "Removing $(basename "${output}")"
   if (( BACKUP )); then
     mv -f "${output}" "${output}.bak"
   else
     rm "${output}"
+  fi
+}
+
+function make_revocation_list() {
+  local output; output="$(output_name "$1")"
+  local sum; sum="$(sha256sum "${output}" | cut -f 1 -d' ')"
+
+  if (( $REVOKE )) && ! [[ -f "${KEY_DIR}/dbx/${sum}.esl" ]]; then
+
+    # Prepare a revocation list for this image
+    mkdir -p "${KEY_DIR}/dbx/"
+    hash-to-efi-sig-list "${output}" "${KEY_DIR}/dbx/${sum}.esl" > /dev/null \
+      || error "Failed to make a revocation list for ${output}"
+
   fi
 }
 
@@ -162,6 +184,106 @@ function update_image() {
 
   # Sign the resulting output file
   sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "${output}" "${output}"
+  local sum; sum="$(sha256sum "${output}" | cut -f 1 -d' ')"
+
+  if (( $REVOKE )); then
+    make_revocation_list "$1"
+
+    # Duplicates will be handled appropriately
+    add_all_to_blacklist || error "Failed to add revocations to DBX"
+
+    # Ensure the user always has (at least) two images that are not on the blacklist:
+    # 1. the currently installed image created above
+    # 2. one prior image (per cfg)
+    # This accounts for the user rolling back to a much older version in order to test/debug
+    remove_hash_from_blacklist "$sum" || error "Failed to remove current image hash from DBX"
+    find "${KEY_DIR}" -name 'backup_image-*.sha256' -print0 | while IFS= read -r -d '' filename
+    do
+       remove_hash_from_blacklist "$(cat "${filename}")" \
+         || error "Failed to remove backup image ${filename} from DBX"
+    done
+
+    make_dbx_mutable 0
+  fi
+}
+
+function make_dbx_mutable() {
+  local mutable; mutable="${1:-1}"
+  local change; change="+i"
+  if (( $mutable )); then
+    change="-i"
+  fi
+  # If the variable is empty, the file might not exist. In this state
+  # the variable is mutable because it can be created. It can't be made immutable.
+  [[ -f "${EFIVARFS_DBX}" ]] && chattr $change "${EFIVARFS_DBX}"  || true
+}
+
+# The hash that is signed for an EFI Signature List (ESL) is not the hash of the binary file.
+# The PE/COFF binary can embed signatures that should not be part of the hash. For a good read
+# see https://blog.uncooperative.org/blog/2013/10/03/uefi-binary-signature-alignment-requirements/
+# It can be extracted from an EFI signature list, it's just a bit painful
+function pecoff_sha256_from_file_sha256() {
+  local sum; sum="$1"
+
+  # The PE/COFF hash can only be calculated with the file present, so if it was not already
+  # stashed as part of remove_image then there's no way to find it. Advice: Remove the ESL.
+  if ! [[ -f "${KEY_DIR}/dbx/${sum}.esl" ]]; then
+    error "The PE/COFF sha256sum for regular sha256sum $sum is not indexed"
+  fi
+
+  # Note: The tool is called 'sig-list-to-certs', but it also works for non-certs (hashes)
+  sig-list-to-certs "${KEY_DIR}/dbx/${sum}.esl" "${KEY_DIR}/dbx/${sum}.esl" >/dev/null \
+    || error "Could not parse ${KEY_DIR}/dbx/${sum}.esl"
+
+  # This will print the textual form of the PE/COFF sha256 sum
+  xxd -p -c32 < "${KEY_DIR}/dbx/${sum}.esl-0.hash"
+  rm "${KEY_DIR}/dbx/${sum}.esl-0.hash"
+}
+
+function sign_revocation() {
+  sign-efi-sig-list -a \
+    -g "${KEY_DIR}/GUID.txt" \
+    -c "${KEY_DIR}"/@(KEK|kek).crt -k "${KEY_DIR}"/@(KEK|kek).key \
+    dbx \
+    "$1" \
+    "${KEY_DIR}/dbx/dbx.auth" > /dev/null
+}
+
+function add_all_to_blacklist() {
+  find "${KEY_DIR}"/dbx -name '*.esl' -print0 | while IFS= read -r -d '' esl
+  do
+    sign_revocation "${esl}"
+    make_dbx_mutable # Kernel marks efivarfs file immutable on first write, so make it mutable just in case
+    efi-updatevar -a -f "${KEY_DIR}"/dbx/dbx.auth dbx || error "Unable to blacklist vestigial image ${esl}"
+  done
+  rm -f "${KEY_DIR}"/dbx/dbx.auth
+}
+
+# Accepts the sha256sum of a signed EFI binary file and ensures that it is not in the dbx blacklist
+# Note: regular file sha256sum, not PE/COFF signed hash.
+function remove_hash_from_blacklist() {
+  local sum; sum="$(pecoff_sha256_from_file_sha256 $1)"
+  if ! efi-readvar -v dbx | grep -q "$sum"; then
+    return 0
+  fi
+
+  # I'm really not a fan of sleeps, but there seems to be a kernel bug where two
+  # updates to the efi vars with temporal proximity can wipe the variable.
+  # I'll take a look into that next so this sleep can be dropped.
+  sleep 1
+
+  make_dbx_mutable
+  efi-readvar -v dbx \
+    | egrep -o 'List [0-9]+|Signature [0-9]+|Hash:'"$sum" \
+    | grep -B2 'Hash:'"$sum" \
+    | head -n 2 \
+    | tr -d 'a-zA-Z ' \
+    | tr '\n' ',' \
+    | sed -re 's/,$/\n/' \
+    | while IFS=, read listnum signum; do
+        efi-updatevar -d "${listnum}-${signum}" -k "${KEY_DIR}"/@(KEK|kek).key dbx \
+          || error "Found current image in dbx blacklist, but couldn't remove it!"
+    done
 }
 
 # Map kernel versions to image names and process changes
@@ -183,6 +305,7 @@ function process_kernels() {
 
 # Check and sign a user-specified extra file
 #   $1: file path
+# TODO: Check hashes against dbx, generate revocations as needed, remove current hash from dbx
 function check_sign_extra_file() {
   if sbverify --cert "${KEY_DIR}"/@(DB|db).crt "$1" >/dev/null; then
     echo "Skipping already signed file $1"
