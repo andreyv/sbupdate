@@ -7,7 +7,5 @@ Target = usr/lib/modules/*/vmlinuz
 Description = Removing UEFI kernel images...
 When = PreTransaction
 Exec = /usr/bin/sbupdate -k -r
-Depends = systemd
-Depends = binutils
 Depends = sbsigntools
 NeedsTargets
