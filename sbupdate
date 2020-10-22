@@ -50,9 +50,8 @@ function load_config() {
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] \
     || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
 
-  local -a glob
-  glob=("${KEY_DIR}"/@(DB|db).key); readonly KEY="${glob[0]}"
-  glob=("${KEY_DIR}"/@(DB|db).crt); readonly CERT="${glob[0]}"
+  local key=("${KEY_DIR}"/@(DB|db).key); readonly KEY="${key[0]}"
+  local cert=("${KEY_DIR}"/@(DB|db).crt); readonly CERT="${cert[0]}"
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
   readonly -A CONFIGS CMDLINE INITRD
