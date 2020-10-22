@@ -1,6 +1,6 @@
 [Trigger]
 Operation = Remove
-Type = File
+Type = Path
 Target = usr/lib/modules/*/vmlinuz
 
 [Action]
