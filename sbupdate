@@ -134,6 +134,12 @@ function remove_image() {
   fi
 }
 
+# Sign a single file
+#   $*: arguments to sbsign
+function sign_file() {
+  sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt "$@"
+}
+
 # Generate a signed kernel image
 #   $1: image name
 #   $2: kernel location
@@ -161,7 +167,7 @@ function update_image() {
   wait $!
 
   # Sign the resulting output file
-  sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "${output}" "${output}"
+  sign_file --output "${output}" "${output}"
 }
 
 # Map kernel versions to image names and process changes
@@ -191,7 +197,7 @@ function check_sign_extra_file() {
     echo "warning: failed to verify $1" >&2
   else
     echo "Signing $1"
-    sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt --output "$1" "$1"
+    sign_file --output "$1" "$1"
   fi
 }
 
@@ -211,6 +217,6 @@ function main() {
   done
 }
 
-main "$@"
+if [[ "${BASH_SOURCE}" == "$0" ]]; then main "$@"; fi
 
 # vim:set ts=2 sw=2 et:

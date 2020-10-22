@@ -1,0 +1,12 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = File
+Target = usr/lib/fwupd/efi/fwupd*.efi
+
+[Action]
+Description = Signing fwupd UEFI executable...
+When = PostTransaction
+Exec = /bin/bash -euc '. sbupdate; load_config; read; sign_file "/${REPLY}"'
+Depends = sbsigntools
+NeedsTargets
