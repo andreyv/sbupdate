@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # sbupdate -- Generate and sign kernel images for UEFI Secure Boot on Arch Linux
-# Copyright (C) 2016-2019 Andrey Vihrov <andrey.vihrov@gmail.com>
+# Copyright (C) 2016-2020 Andrey Vihrov <andrey.vihrov@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,6 +49,10 @@ function load_config() {
   [[ -d "${ESP_DIR}" ]] || error "${ESP_DIR} does not exist"
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] \
     || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
+
+  local -a glob
+  glob=("${KEY_DIR}"/@(DB|db).key); readonly KEY="${glob[0]}"
+  glob=("${KEY_DIR}"/@(DB|db).crt); readonly CERT="${glob[0]}"
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
   readonly -A CONFIGS CMDLINE INITRD
@@ -137,7 +141,7 @@ function remove_image() {
 # Sign a single file
 #   $*: arguments to sbsign
 function sign_file() {
-  sbsign --key "${KEY_DIR}"/@(DB|db).key --cert "${KEY_DIR}"/@(DB|db).crt "$@"
+  sbsign --key "${KEY}" --cert "${CERT}" "$@"
 }
 
 # Generate a signed kernel image
@@ -190,7 +194,7 @@ function process_kernels() {
 # Check and sign a user-specified extra file
 #   $1: file path
 function check_sign_extra_file() {
-  if sbverify --cert "${KEY_DIR}"/@(DB|db).crt "$1" >/dev/null; then
+  if sbverify --cert "${CERT}" "$1" >/dev/null; then
     echo "Skipping already signed file $1"
   elif (( HOOK )); then
     # Signing extra files from the hook is prohibited for security reasons
