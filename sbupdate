@@ -36,6 +36,7 @@ function load_config() {
   OUT_DIR="EFI/Arch"
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   BACKUP=1
+  AS_GRUBX64EFI=""
   EXTRA_SIGN=()
   declare -g -A CONFIGS CMDLINE INITRD
 
@@ -53,7 +54,7 @@ function load_config() {
   local key=("${KEY_DIR}"/@(DB|db).key); readonly KEY="${key[0]}"
   local cert=("${KEY_DIR}"/@(DB|db).crt); readonly CERT="${cert[0]}"
 
-  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
+  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT AS_GRUBX64EFI
   readonly -A CONFIGS CMDLINE INITRD
 }
 
@@ -171,6 +172,10 @@ function update_image() {
 
   # Sign the resulting output file
   sign_file --output "${output}" "${output}"
+
+  if [ "$1" == "$AS_GRUBX64EFI" ] ; then
+    cp "${output}" "$(dirname ${output})/grubx64.efi"
+  fi
 }
 
 # Map kernel versions to image names and process changes

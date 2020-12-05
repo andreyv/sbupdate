@@ -45,6 +45,8 @@ automatically.
 
 💡 _Hint_: Disable boot splash to keep the UEFI boot logo.
 
+💡 _Hint_: Specify AS_GRUBX64EFI=_kernel-image_ to rename that kernel to "grubx64.efi" during installation to the ESP (required when using Shim as bootloader).
+
 
 ## Direct booting vs. boot manager
 
