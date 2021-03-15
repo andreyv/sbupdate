@@ -92,7 +92,7 @@ function find_efi_stub() {
 
 # Create a list of kernels to process
 function get_kernels() {
-  local force_all=0
+  local force_all=0 kdir
   declare -g -a KERNELS
 
   if (( HOOK )); then
@@ -101,7 +101,9 @@ function get_kernels() {
     while read -r target; do
       if [[ "${target}" =~ ^usr/lib/modules/.+/vmlinuz$ ]]; then
         # Regular kernel
-        KERNELS+=("/${target}")
+        kdir="$(dirname "/${target}")"
+        KERNELS+=("$(<"${kdir}/pkgbase")")
+        [[ -f "${kdir}/kernelbase" ]] && KERNELS[-1]="$(<"${kdir}/kernelbase")"
       else
         # Another dependency; update all kernels
         force_all=1
@@ -114,7 +116,7 @@ function get_kernels() {
 
   if (( force_all )); then
     (( ! REMOVE )) || error "trying to remove all kernels"
-    KERNELS=(/usr/lib/modules/*/vmlinuz)
+    KERNELS=(/boot/vmlinuz-*); KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
   fi
   readonly -a KERNELS
 }
@@ -144,9 +146,10 @@ function sign_file() {
 }
 
 # Generate a signed kernel image
-#   $1: image name
-#   $2: kernel location
+#   $1: configuration name
+#   $2: kernel name
 function update_image() {
+  local linux="/boot/vmlinuz-$2"
   local initrd="${INITRD[$1]:-/boot/initramfs-$1.img}"
   local cmdline="${CMDLINE[$1]:-${CMDLINE_DEFAULT}}"
   local output; output="$(output_name "$1")"
@@ -164,7 +167,7 @@ function update_image() {
     --add-section .osrel="/etc/os-release"                          --change-section-vma .osrel=0x20000    \
     --add-section .cmdline=<(echo -n "${cmdline}")                  --change-section-vma .cmdline=0x30000  \
     --add-section .splash="${SPLASH}"                               --change-section-vma .splash=0x40000   \
-    --add-section .linux="$2"                                       --change-section-vma .linux=0x2000000  \
+    --add-section .linux="${linux}"                                 --change-section-vma .linux=0x2000000  \
     --add-section .initrd=<(cat "${INITRD_PREPEND[@]}" "${initrd}") --change-section-vma .initrd=0x3000000 \
     "${EFISTUB}" "${output}"
   wait $!
@@ -175,16 +178,12 @@ function update_image() {
 
 # Map kernel versions to image names and process changes
 function process_kernels() {
-  local kdir name
-  for k in "${KERNELS[@]}"; do
-    kdir="$(dirname "$k")"
-    name="$(<"${kdir}/pkgbase")"
-    [[ -f "${kdir}/kernelbase" ]] && name="$(<"${kdir}/kernelbase")"
+  for name in "${KERNELS[@]}"; do
     for cfg in ${CONFIGS[${name}]:-${name}}; do # Note: unquoted expansion
       if (( REMOVE )); then
         remove_image "${cfg}"
       else
-        update_image "${cfg}" "$k"
+        update_image "${cfg}" "${name}"
       fi
     done
   done
