@@ -44,8 +44,9 @@ The following optional settings are available:
 <a name="ucode">💡 _Hint_:</a> Intel and AMD microcode updates are handled
 automatically.
 
-💡 _Hint_: Disable boot splash to keep the UEFI boot logo.
-
+💡 _Hint_: Disable boot splash to keep the UEFI boot logo. Oppositely, to keep
+the boot splash image during boot, add the `quiet video=efifb:nobgrt`
+parameters to the kernel command line.
 
 ## Direct booting vs. boot manager
 
