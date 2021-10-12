@@ -10,6 +10,9 @@ Operation = Upgrade
 Operation = Remove
 Type = Path
 Target = usr/lib/initcpio/*
+Target = usr/src/*/dkms.conf
+Target = usr/lib/modules/*/build/include/
+Target = usr/lib/modules/*/modules.alias
 
 [Trigger]
 Operation = Install
