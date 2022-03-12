@@ -1,8 +1,9 @@
-# sbupdate
+# ukpdate
 
-![](https://github.com/andreyv/sbupdate/workflows/CI/badge.svg)
+This tool is a fork from https://github.com/andreyv/sbupdate<br>
+It allows you manage an Uefi Unified Kernel Image, including to sign Arch Linux kernels using your own Secure Boot keys.
 
-This tool allows you to sign Arch Linux kernels using your own Secure Boot keys.
+<b>This tool is under development at this moment</b><br>
 
 ## Installation
 
