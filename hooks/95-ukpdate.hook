@@ -27,7 +27,7 @@ Target = systemd
 [Action]
 Description = Updating UEFI kernel images...
 When = PostTransaction
-Exec = /usr/bin/sbupdate -k
+Exec = /usr/bin/ukpdate -k
 Depends = systemd
 Depends = binutils
 Depends = sbsigntools

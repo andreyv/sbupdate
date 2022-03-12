@@ -6,14 +6,14 @@ SHELLCHECK ?= shellcheck
 all:
 
 check:
-	$(SHELLCHECK) sbupdate
+	$(SHELLCHECK) ukpdate
 
 install:
-	$(INSTALL) -D -m 0755 -t "$(DESTDIR)/usr/bin" sbupdate
-	$(INSTALL) -D -m 0644 -t "$(DESTDIR)/etc" sbupdate.conf
+	$(INSTALL) -D -m 0755 -t "$(DESTDIR)/usr/bin" ukpdate
+	$(INSTALL) -D -m 0644 -t "$(DESTDIR)/etc" ukpdate.conf
 	$(INSTALL) -D -m 0644 -t "$(DESTDIR)/usr/share/libalpm/hooks" \
-      $(addprefix hooks/,95-sbupdate.hook 50-sbupdate-remove.hook 50-fwupd-sign.hook)
+      $(addprefix hooks/,95-ukpdate.hook 50-ukpdate-remove.hook 50-fwupd-sign.hook)
 	$(INSTALL) -D -m 0644 -t "$(DESTDIR)/usr/lib/tmpfiles.d" \
-      tmpfiles.d/sbupdate.conf
+      tmpfiles.d/ukpdate.conf
 	$(INSTALL) -D -m 0644 -t \
       "$(DESTDIR)$(or $(DOCDIR),/usr/share/doc/sbupdate)" README.md

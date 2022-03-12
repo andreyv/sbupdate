@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# sbupdate -- Generate and sign kernel images for UEFI Secure Boot on Arch Linux
+# ukpdate -- Generate and sign kernel images for UEFI Secure Boot on Arch Linux
 # Copyright (C) 2016-2020 Andrey Vihrov <andrey.vihrov@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@ set -eu
 
 shopt -s extglob
 
-readonly CONFFILE="/etc/sbupdate.conf"
+readonly CONFFILE="/etc/ukpdate.conf"
 
 # Print an error and return unsuccessfully
 #  $1: error message
