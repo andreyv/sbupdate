@@ -35,6 +35,7 @@ function load_config() {
   ESP_DIR="/boot"
   OUT_DIR="EFI/Arch"
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
+  OUTPUT_NAME=""
   BACKUP=1
   EXTRA_SIGN=()
   declare -g -A CONFIGS CMDLINE INITRD OUTPUT
@@ -124,7 +125,10 @@ function get_kernels() {
 # Return output file path corresponding to an image
 #   $1: configuration name
 function output_name() {
-  echo "${ESP_DIR}/${OUTPUT[$1]:-${OUT_DIR}/$1-signed.efi}"
+  if [ -z ${OUTPUT_NAME} ]; 
+  then echo "${ESP_DIR}/${OUTPUT[$1]:-${OUT_DIR}/$1-signed.efi}"
+  else echo "${ESP_DIR}/${OUTPUT[$1]:-${OUT_DIR}/${OUTPUT_NAME}}"
+  fi
 }
 
 # Remove a signed kernel image
