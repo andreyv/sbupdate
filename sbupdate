@@ -20,7 +20,7 @@ set -eu
 
 shopt -s extglob
 
-readonly CONFFILE="/etc/sbupdate.conf"
+CONFFILE="/etc/sbupdate.conf"
 
 # Print an error and return unsuccessfully
 #  $1: error message
@@ -63,10 +63,11 @@ function parse_args() {
   HOOK=0
   REMOVE=0
 
-  while getopts "kr" opt; do
+  while getopts "krc:" opt; do
     case "${opt}" in
       k) HOOK=1 ;;
       r) REMOVE=1 ;;
+      c) CONFFILE=${OPTARG} ;;
       ?) exit 1 ;;
     esac
   done
@@ -205,8 +206,8 @@ function check_sign_extra_file() {
 
 # Entry point
 function main() {
-  load_config
   parse_args "$@"
+  load_config
 
   find_efi_stub
   get_kernels
