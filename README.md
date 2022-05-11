@@ -101,4 +101,6 @@ recommended for increased security.
 * https://wiki.archlinux.org/index.php/Secure_Boot
 * https://www.rodsbooks.com/efi-bootloaders/index.html
 * https://bentley.link/secureboot/
-* https://github.com/gdamjan/secure-boot — a similar project
+* https://man.archlinux.org/man/mkinitcpio.8 `--uefi` option
+* https://github.com/Foxboron/sbctl — Secure Boot Manager
+* https://github.com/gdamjan/secure-boot
