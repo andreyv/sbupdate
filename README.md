@@ -31,7 +31,8 @@ the signed UEFI image.
 ## Configuration
 
 Edit the file `/etc/sbupdate.conf`. Set your default kernel command line
-in the `CMDLINE_DEFAULT` variable.
+in the `CMDLINE_DEFAULT` variable. If the file `/etc/kernel/cmdline` exists,
+it is read into `CMDLINE_DEFAULT` automatically.
 
 The following optional settings are available:
 * Command line and initramfs[<sup>†</sup>](#ucode) for each kernel config

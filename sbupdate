@@ -43,12 +43,13 @@ function load_config() {
   INITRD_PREPEND=(/boot/@(intel|amd)-ucode.img)
   shopt -u nullglob
 
+  [[ -f /etc/kernel/cmdline ]] && CMDLINE_DEFAULT="$(</etc/kernel/cmdline)"
+
   # shellcheck disable=SC1090
   source "${CONFFILE}"
 
   [[ -d "${ESP_DIR}" ]] || error "${ESP_DIR} does not exist"
-  [[ -n "${CMDLINE_DEFAULT:+x}" ]] \
-    || error "CMDLINE_DEFAULT is not defined or empty in ${CONFFILE}"
+  [[ -n "${CMDLINE_DEFAULT:+x}" ]] || error "CMDLINE_DEFAULT is not defined or empty"
 
   local key=("${KEY_DIR}"/@(DB|db).key); readonly KEY="${key[0]}"
   local cert=("${KEY_DIR}"/@(DB|db).crt); readonly CERT="${cert[0]}"
