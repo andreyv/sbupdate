@@ -68,13 +68,17 @@ format is
     efi   /EFI/Arch/<NAME>-signed.efi
 
 You also need to sign your boot manager's own UEFI executables with your
-custom keys. Add corresponding filenames to the `EXTRA_SIGN` array in
-`/etc/sbupdate.conf`, for example (systemd-boot):
+custom keys. For systemd-boot, this is handled automatically on update. For
+first-time setup, run
 
-    EXTRA_SIGN=('/boot/EFI/BOOT/BOOTX64.EFI' '/boot/EFI/systemd/systemd-bootx64.efi')
+```shell
+echo /usr/lib/systemd/boot/efi/systemd-boot*.efi | sudo sbupdate -f
+sudo bootctl update
+```
 
-and re-run the tool if needed. You should remember to run the tool every time
-you update your boot manager's files (e. g., after `sudo bootctl update`).
+For other boot managers, add corresponding ESP executables to the `EXTRA_SIGN`
+array in `/etc/sbupdate.conf` and re-run the tool if needed. You should
+remember to run the tool every time you update your boot manager's files.
 
 ⚠️ **Note**: When booting with Secure Boot disabled, options passed from an EFI shell
 (_even empty_) may override the built-in command line in the combined image, and
@@ -91,9 +95,9 @@ contain signed images which cannot be tampered with.
 
 See [Configuration](#configuration) to change the ESP directory.
 
-Note that if you use a boot manager such as systemd-boot, then its files still
-need to be on the ESP before they are signed. It is customary to sign these
-files right after they have been installed on the ESP. Direct booting is
+Note that if you use a boot manager other than systemd-boot, then its files
+still need to be on the ESP before they are signed. It is customary to sign
+these files right after they have been installed on the ESP. Direct booting is
 recommended for increased security.
 
 ## Related resources

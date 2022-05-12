@@ -3,9 +3,10 @@ Operation = Install
 Operation = Upgrade
 Type = Path
 Target = usr/lib/fwupd/efi/fwupd*.efi
+Target = usr/lib/systemd/boot/efi/systemd-boot*.efi
 
 [Action]
-Description = Signing fwupd UEFI executable...
+Description = Signing UEFI executables...
 When = PostTransaction
 Exec = /usr/bin/sbupdate -f
 Depends = sbsigntools
