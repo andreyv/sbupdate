@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # sbupdate -- Generate and sign kernel images for UEFI Secure Boot on Arch Linux
-# Copyright (C) 2016-2020 Andrey Vihrov <andrey.vihrov@gmail.com>
+# Copyright (C) 2016-2022 Andrey Vihrov <andrey.vihrov@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -61,18 +61,20 @@ function load_config() {
 # Parse script arguments
 #  $@: arguments
 function parse_args() {
+  FILE_MODE=0
   HOOK=0
   REMOVE=0
 
-  while getopts "kr" opt; do
+  while getopts "fkr" opt; do
     case "${opt}" in
+      f) FILE_MODE=1 ;;
       k) HOOK=1 ;;
       r) REMOVE=1 ;;
       ?) exit 1 ;;
     esac
   done
 
-  readonly HOOK REMOVE
+  readonly FILE_MODE HOOK REMOVE
 }
 
 # Find the location of the systemd EFI stub
@@ -204,10 +206,23 @@ function check_sign_extra_file() {
   fi
 }
 
+# Individual file signing mode for use in hooks
+#
+# Read file names from standard input and create .signed files next to them.
+function run_file_mode() {
+  while read -r file; do
+    echo "Signing $(basename "${file}")"
+    sign_file "${file}"
+  done
+  exit
+}
+
 # Entry point
 function main() {
   load_config
   parse_args "$@"
+
+  (( FILE_MODE )) && run_file_mode
 
   find_efi_stub
   get_kernels

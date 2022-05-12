@@ -7,6 +7,6 @@ Target = usr/lib/fwupd/efi/fwupd*.efi
 [Action]
 Description = Signing fwupd UEFI executable...
 When = PostTransaction
-Exec = /bin/bash -euc '. sbupdate; load_config; read; sign_file "/${REPLY}"'
+Exec = /usr/bin/sbupdate -f
 Depends = sbsigntools
 NeedsTargets
