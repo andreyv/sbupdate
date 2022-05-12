@@ -119,7 +119,9 @@ function get_kernels() {
 
   if (( force_all )); then
     (( ! REMOVE )) || error "trying to remove all kernels"
-    KERNELS=(/boot/vmlinuz-*); KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
+    shopt -s extglob
+    KERNELS=(/boot/vmlinuz-+([-[:alnum:]])); KERNELS=("${KERNELS[@]#/boot/vmlinuz-}")
+    shopt -u extglob
   fi
   readonly -a KERNELS
 }
