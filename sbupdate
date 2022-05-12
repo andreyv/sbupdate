@@ -102,7 +102,7 @@ function get_kernels() {
     while read -r target; do
       if [[ "${target}" =~ ^usr/lib/modules/.+/vmlinuz$ ]]; then
         # Regular kernel
-        kdir="$(dirname "/${target}")"
+        kdir="$(dirname "${target}")"
         KERNELS+=("$(<"${kdir}/pkgbase")")
         [[ -f "${kdir}/kernelbase" ]] && KERNELS[-1]="$(<"${kdir}/kernelbase")"
       else
