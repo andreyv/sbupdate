@@ -87,9 +87,13 @@ the boot may fail. See [#4](https://github.com/andreyv/sbupdate/issues/4).
 
 ## ESP mount point
 
-Typically ESP is mounted on `/boot` and contains also the original, unsigned
-files such as the Linux kernel image and initramfs. You may choose to mount ESP
-on a different directory (for example, [`/efi`](https://www.freedesktop.org/software/systemd/man/bootctl.html#--esp-path=))
+Typically [ESP](https://wiki.archlinux.org/title/EFI_system_partition) is
+mounted on `/boot` and contains also the original, unsigned files such as the
+Linux kernel image and initramfs. These files are susceptible to offline
+tampering.
+
+It is recommended to mount ESP on a different directory, such as
+[`/efi`](https://www.freedesktop.org/software/systemd/man/bootctl.html#--esp-path=),
 and keep `/boot` itself on the secure root file system. This way ESP will only
 contain signed images which cannot be tampered with.
 
