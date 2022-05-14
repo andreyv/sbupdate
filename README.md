@@ -35,8 +35,8 @@ in the `CMDLINE_DEFAULT` variable. If the file `/etc/kernel/cmdline` exists,
 it is read into `CMDLINE_DEFAULT` automatically.
 
 The following optional settings are available:
-* Command line and initramfs[<sup>†</sup>](#ucode) for each kernel config
-  (each kernel can have multiple configs)
+* Command line, initramfs[<sup>†</sup>](#ucode) and output name for each kernel
+  config (each kernel can have multiple configs)
 * A list of additional boot files to sign
 * Locations of the key, ESP and output directories
 * Boot splash image
@@ -111,6 +111,6 @@ recommended for increased security.
 * https://wiki.archlinux.org/index.php/Secure_Boot
 * https://www.rodsbooks.com/efi-bootloaders/index.html
 * https://bentley.link/secureboot/
-* https://man.archlinux.org/man/mkinitcpio.8 `--uefi` option
-* https://github.com/Foxboron/sbctl — Secure Boot Manager
-* https://github.com/gdamjan/secure-boot
+* [`mkinitcpio(8)`](https://man.archlinux.org/man/mkinitcpio.8) `--uefi` option
+* [Foxboron/sbctl](https://github.com/Foxboron/sbctl) — Secure Boot Manager
+* [gdamjan/secure-boot](https://github.com/gdamjan/secure-boot)
