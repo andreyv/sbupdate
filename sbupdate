@@ -35,6 +35,7 @@ function load_config() {
   ESP_DIR="/boot"
   OUT_DIR="EFI/Arch"
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
+  ENCRYPTED=0
   BACKUP=1
   EXTRA_SIGN=()
   declare -g -A CONFIGS CMDLINE INITRD OUTPUT
@@ -51,10 +52,17 @@ function load_config() {
   [[ -d "${ESP_DIR}" ]] || error "${ESP_DIR} does not exist"
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] || error "CMDLINE_DEFAULT is not defined or empty"
 
+  if (( ENCRYPTED )); then
+    DEC_DIR="/tmp/efi-keys"
+    mkdir "${DEC_DIR}"
+    while true; do encfs "${KEY_DIR}" "${DEC_DIR}" && break; done
+    KEY_DIR="${DEC_DIR}"
+  fi
+
   local key=("${KEY_DIR}"/@(DB|db).key); readonly KEY="${key[0]}"
   local cert=("${KEY_DIR}"/@(DB|db).crt); readonly CERT="${cert[0]}"
 
-  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
+  readonly KEY_DIR ESP_DIR OUT_DIR SPLASH ENCRYPTED BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
   readonly -A CONFIGS CMDLINE INITRD OUTPUT
 }
 
@@ -234,6 +242,11 @@ function main() {
   for f in "${EXTRA_SIGN[@]}"; do
     check_sign_extra_file "$f"
   done
+
+  if (( ENCRYPTED )); then
+    encfs -u "${KEY_DIR}" > /dev/null
+    rmdir "${KEY_DIR}"
+  fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then main "$@"; fi
