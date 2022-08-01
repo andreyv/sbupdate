@@ -53,10 +53,10 @@ function load_config() {
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] || error "CMDLINE_DEFAULT is not defined or empty"
 
   if (( ENCRYPTED )); then
-    DEC_DIR="/tmp/efi-keys"
-    mkdir "${DEC_DIR}"
-    while true; do encfs "${KEY_DIR}" "${DEC_DIR}" && break; done
-    KEY_DIR="${DEC_DIR}"
+    local decrypt="/tmp/efi-keys"
+    mkdir "${decrypt}"
+    while true; do encfs "${KEY_DIR}" "${decrypt}" && break; done
+    KEY_DIR="${decrypt}"
   fi
 
   local key=("${KEY_DIR}"/@(DB|db).key); readonly KEY="${key[0]}"
