@@ -114,3 +114,5 @@ recommended for increased security.
 * [`mkinitcpio(8)`](https://man.archlinux.org/man/mkinitcpio.8) `--uefi` option
 * [Foxboron/sbctl](https://github.com/Foxboron/sbctl) — Secure Boot Manager
 * [gdamjan/secure-boot](https://github.com/gdamjan/secure-boot)
+* [verity-squash-root](https://github.com/brandsimon/verity-squash-root/)
+  — Build signed UKI with a verified rootfs.
