@@ -37,7 +37,7 @@ function load_config() {
   SPLASH="/usr/share/systemd/bootctl/splash-arch.bmp"
   BACKUP=1
   EXTRA_SIGN=()
-  declare -g -A CONFIGS CMDLINE INITRD OUTPUT
+  declare -g -A CONFIGS CMDLINE INITRD OUTPUT UFLAGS
 
   shopt -s nullglob
   INITRD_PREPEND=(/boot/@(intel|amd)-ucode.img)
@@ -55,7 +55,7 @@ function load_config() {
   local cert=("${KEY_DIR}"/@(DB|db).crt); readonly CERT="${cert[0]}"
 
   readonly KEY_DIR ESP_DIR OUT_DIR SPLASH BACKUP EXTRA_SIGN INITRD_PREPEND CMDLINE_DEFAULT
-  readonly -A CONFIGS CMDLINE INITRD OUTPUT
+  readonly -A CONFIGS CMDLINE INITRD OUTPUT UFLAGS
 }
 
 # Parse script arguments
@@ -75,22 +75,6 @@ function parse_args() {
   done
 
   readonly FILE_MODE HOOK REMOVE
-}
-
-# Find the location of the systemd EFI stub
-function find_efi_stub() {
-  local uname; uname="$(uname -m)"
-  case "${uname}" in
-    x86_64)
-      readonly EFISTUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"
-      ;;
-    i686)
-      readonly EFISTUB="/usr/lib/systemd/boot/efi/linuxia32.efi.stub"
-      ;;
-    *)
-      error "unsupported architecture: ${uname}"
-      ;;
-  esac
 }
 
 # Create a list of kernels to process
@@ -160,21 +144,17 @@ function update_image() {
 
   echo "Generating and signing $(basename "${output}")"
 
-  # Create a combined binary with systemd EFI stub. For additional information see:
-  #   https://github.com/systemd/systemd/blob/master/src/boot/efi/stub.c
-  #   https://github.com/systemd/systemd/blob/master/test/test-efi-create-disk.sh
-  #
-  # Prepend initramfs files are joined with the main initramfs in one image. Refer to:
-  #   https://www.kernel.org/doc/Documentation/early-userspace/buffer-format.txt
-  #   https://www.kernel.org/doc/Documentation/x86/microcode.txt
-  objcopy \
-    --add-section .osrel="/etc/os-release"                          --change-section-vma .osrel=0x20000    \
-    --add-section .cmdline=<(printf "%s\0" "${cmdline}")            --change-section-vma .cmdline=0x30000  \
-    --add-section .splash="${SPLASH}"                               --change-section-vma .splash=0x40000   \
-    --add-section .linux="${linux}"                                 --change-section-vma .linux=0x2000000  \
-    --add-section .initrd=<(cat "${INITRD_PREPEND[@]}" "${initrd}") --change-section-vma .initrd=0x3000000 \
-    "${EFISTUB}" "${output}"
-  wait $!
+  # Create a combined binary with systemd EFI stub. For additional information
+  # see ukify(1) and https://github.com/systemd/systemd/blob/main/src/boot/efi/stub.c.
+  local initrd_all=("${INITRD_PREPEND[@]}" "${initrd}")
+  /usr/lib/systemd/ukify build      \
+    --linux="${linux}"              \
+    "${initrd_all[@]/#/--initrd=}"  \
+    --cmdline="${cmdline}"          \
+    --os-release=@"/etc/os-release" \
+    --splash="${SPLASH}"            \
+    "${UFLAGS[@]}"                  \
+    --output "${output}"
 
   # Sign the resulting output file
   sign_file --output "${output}" "${output}"
@@ -225,7 +205,6 @@ function main() {
 
   (( FILE_MODE )) && run_file_mode
 
-  find_efi_stub
   get_kernels
 
   mkdir -p "${ESP_DIR}/${OUT_DIR}"
