@@ -51,6 +51,9 @@ function load_config() {
   [[ -d "${ESP_DIR}" ]] || error "${ESP_DIR} does not exist"
   [[ -n "${CMDLINE_DEFAULT:+x}" ]] || error "CMDLINE_DEFAULT is not defined or empty"
 
+  # Backwards compatibility
+  [[ "${SPLASH}" == "/dev/null" ]] && SPLASH=""
+
   local key=("${KEY_DIR}"/@(DB|db).key); readonly KEY="${key[0]}"
   local cert=("${KEY_DIR}"/@(DB|db).crt); readonly CERT="${cert[0]}"
 
@@ -152,7 +155,7 @@ function update_image() {
     "${initrd_all[@]/#/--initrd=}"  \
     --cmdline="${cmdline}"          \
     --os-release=@"/etc/os-release" \
-    --splash="${SPLASH}"            \
+    ${SPLASH:+--splash="${SPLASH}"} \
     "${UFLAGS[@]}"                  \
     --output "${output}"
 
